@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>RevZilla || The Battle for Philadelphia</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="phaser.min.js"></script>
+	<link href='https://fonts.googleapis.com/css?family=Press+Start+2P' rel='stylesheet' type='text/css'>
+    </head>
+    <body>
+    <style>
+      body{font-family: "Press Start 2P";}
+    </style>
+    <p style="position: fixed; left: -1000px; top: -1000px;">load font, please</p>
+    <script type="text/javascript" src="states/load.js"></script>
+    <script type="text/javascript" src="states/startMenu.js"></script>
+    <script type="text/javascript" src="states/introStory.js"></script>
+    <script type="text/javascript" src="states/playerSelect.js"></script>
+    <script type="text/javascript" src="states/levelOneLoad.js"></script>
+    <script type="text/javascript" src="states/levelOneRedux.js"></script>
+
+
+    <script type="text/javascript">
+   
+    var game = new Phaser.Game(1024,768, Phaser.AUTO, '');
+    
+	game.state.add('load', loadState);
+	game.state.add('startMenu', startMenuState);
+	game.state.add('introStory',introStoryState);
+	game.state.add('playerSelect',playerSelectState);
+	game.state.add('levelOneLoad',levelOneLoadState);
+	game.state.add('levelOne', levelOneState);
+
+	game.state.start('load');
+
+    </script>	
+    </body>
+</html>

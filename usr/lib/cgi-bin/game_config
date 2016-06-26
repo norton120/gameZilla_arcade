@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Content-type: application/json"
+echo ""
+echo "{"
+
+echo "\"coinMode\": {\"freePlay\":false},"
+echo "\"quietMode\": false"
+
+echo "}"

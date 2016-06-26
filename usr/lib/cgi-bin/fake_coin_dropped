@@ -1,0 +1,6 @@
+#!/bin/bash
+
+COIN="/usr/lib/cgi-bin/coin_dropped"
+
+  sed -i 's/false/true/g' $COIN
+

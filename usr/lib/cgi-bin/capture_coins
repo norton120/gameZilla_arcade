@@ -1,0 +1,20 @@
+#!/bin/bash
+
+COIN="/usr/lib/cgi-bin/coin_dropped"
+
+COUNT=$(grep -c "true" $COIN) 
+
+# convert to boolean string for the json response
+if [ $COUNT = 1 ] 
+then
+ TEXT="true";
+ #reset the coin counter
+ sed -i 's/true/false/g' $COIN 
+else 
+ TEXT="false"
+fi
+
+echo "Content-type: application/json"
+
+echo ""
+echo "{\"coinDropped\": $TEXT}"

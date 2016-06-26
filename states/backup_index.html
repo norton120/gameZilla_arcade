@@ -1,0 +1,435 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>GameZilla</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <script src="phaser.min.js"></script>
+    </head>
+    <body>
+    <style>
+ /*   html
+    { margin: 0; padding:0; text-align:center; margin-top:5%; margin-left:15%;background:#777; background: url('http://revzilla.com/images/revzilla/support/bg.jpg'); background-repeat:repeat;}
+ */
+    </style>
+    <script type="text/javascript">
+
+    window.onload = function() {
+   
+        var game = new Phaser.Game("100%","100%", Phaser.AUTO, '', { preload: preload, create: create, update: update});
+   
+        function preload () {
+
+	/*sound effects*/	
+	    game.load.audio('shoot', 'assets/sounds/sprocket.mp3');  	
+	    game.load.audio('apex_preditor','assets/sounds/apex_preditor.mp3');
+	    game.load.audio('juggernaut', 'assets/sounds/juggernaut.mp3');
+	    game.load.audio('black_betty','assets/sounds/black_betty.mp3');	
+	    game.load.audio('jump','assets/sounds/jump.mp3');
+	    game.load.audio('hey', 'assets/sounds/hey.mp3');
+	    
+	    game.load.image('zla','assets/images/longstreet.gif');
+	    game.load.image('zla_sticker', 'assets/images/zla.png');
+	    game.load.image('sprocket','assets/images/sprocket.png',56,56);
+	    game.load.image('concrete','assets/images/concrete.png',100,100);
+	    game.load.image('x_button','assets/images/x_button.png',75,75);
+	    game.load.image('z_button','assets/images/z_button.png',75,75);
+	    game.load.spritesheet('health_bar', 'assets/images/health_bar.png',123.8,25);
+	    game.load.spritesheet('booch', 'assets/images/anthony_sprite.png',119.5,140);
+	    game.load.spritesheet('troll', 'assets/images/troll_sprite.png',95.5,119);
+	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
+        }
+/*Global vars*/	
+
+// world components
+var platforms;	
+var healthBar;
+
+// characters 	
+var booch;
+var trolls;
+var troll;
+var all_the_things;
+
+// artifacts
+var sprockets;
+var apexStickers;
+
+// sounds
+    var music;
+    var juggernaut_sound;
+    var apex_preditor_sound;
+    var shoot_sound;
+    var jump_sound;
+    var hey;
+
+// key inputs    
+var cursors;    
+var jumpKey;
+var fireKey;
+var jumpKeyPressed;
+var fireKeyPressed;
+
+
+        function create () {
+	    game.physics.startSystem(Phaser.Physics.ARCADE);
+ 	    game.world.setBounds(0,0, 3000, window.innerHeight);
+	    game.time.desiredFps = 30;
+	    background = game.add.sprite(0,(game.world.height*-.3), 'zla');
+	    var backgroundScale = (game.world.height/256)*1.4 ;
+	    background.scale.setTo(backgroundScale, backgroundScale);
+            game.physics.arcade.gravity.y = 1000;
+
+	    /*create physical platforms (ground and ledges)*/
+            platforms = game.add.group();
+	    platforms.enableBody = true;
+
+	    maxPlatformHeight = game.world.height - ((game.world.height - (game.world.height*.9) < 100)? game.world.height - game.world.height*.9 : 100);
+	    var street = platforms.create(0,maxPlatformHeight, 'concrete');
+	    street.scale.setTo(30,1);
+	    
+	    // make all platforms static and immovable
+	    platforms.forEach(function(p){
+	      p.body.allowGravity = false;
+	      p.body.immovable = true;
+	    });
+
+            /*create sounds*/
+	    music = game.add.audio('black_betty');
+	    shoot_sound = game.add.audio('shoot');
+	    juggernaut_sound = game.add.audio('juggernaut');
+	    apex_preditor_sound = game.add.audio('apex_preditor');
+	    jump_sound = game.add.audio('jump');
+	    hey = game.add.audio('hey');
+	    music.play(null, 10);
+	   
+ /*Controls*/
+
+        // virtual gamepad on touchscreen
+	if(('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0))
+	{
+ 	  jumpKey = game.add.button(window.innerWidth -125, game.world.height -90, 'z_button', null, this, 0, 1, 0, 1);
+	  jumpKey.fixedToCamera = true;
+	  jumpKey.onInputDown.add(function(){jumpKeyPressed = true;});
+	  jumpKey.onInputUp.add(function(){jumpKeyPressed = false;});
+          fireKey = game.add.button(window.innerWidth - 250, game.world.height -90, 'x_button', null, this, 0,1,0,1);
+	  fireKey.fixedToCamera = true;
+	  fireKey.onInputDown.add(function(){fireKeyPressed = true;});
+	  fireKey.onInputUp.add(function(){fireKeyPressed = false;});
+	}	    
+
+	
+	// gamepad detected
+	else if (game.input.gamepad.supported && game.input.gamepad.active && pad1.connected)
+	{
+
+	}
+	else
+	{
+	    cursors = game.input.keyboard.createCursorKeys();
+	    jumpKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
+  	    fireKey = game.input.keyboard.addKey(Phaser.Keyboard.X);
+	    fireKey.onUp.add(function(){sprockets.areFiring = false;});	    
+
+	}    
+
+	    cursors = game.input.keyboard.createCursorKeys();
+
+/*BOOCH*/
+	    // Create our hero
+	    booch = game.add.sprite(100,((window.innerWidth > 768)? game.world.height*.6 :game.world.height*.1),'booch');
+
+	    // camera follows booch
+	    game.camera.follow(booch);
+
+	    // Add additional needed props to Booch
+	    booch['direction'] = 'right';	    
+	    booch['ghostTimer'] = game.time.now + 1000; 
+	    booch['hitTimer'] = 0;
+	    booch.health = 5;
+
+	    // give Booch ability to powerup
+	    booch['powerMoves'] = {'poweredUp':false, 'timer':0, 'buffer':0};
+	    booch['jump'] = {'jumpTimer':0};
+	    
+	    // set booch defaults
+	    booch.frame = 4;
+	    game.physics.enable(booch, Phaser.Physics.ARCADE);
+	    booch.body.collideWorldBounds = true;
+	    
+	    // add booch movements
+	    booch.animations.add('right_run', [13,14,15],8, true);
+	    booch.animations.add('left_run', [16,17,18],8,true);
+	    booch.animations.add('right_shoot',[0,1,2,3],8, true);
+	    booch.animations.add('left_shoot',[5,6,7,8],8,true);	
+	    booch.animations.add('powerUp',[10,11,12],10, true);
+
+
+	    // Create the sprockets that booch throws,
+	    // along with the needed vars for timing and fire state
+	    sprockets = game.add.group();
+	    sprockets.createMultiple(500,'sprocket',0,false);  
+	    sprockets['fireRate'] = 300;
+	    sprockets['nextFire'] = 0;
+	    sprockets['fire'] = false;
+	    sprockets['areFiring'] = false;
+
+	    // Create the apex stickers 
+	    apexStickers = game.add.emitter();
+            apexStickers.makeParticles('zla_sticker');
+            apexStickers.minParticleSpeed.setTo(-400, -400);
+            apexStickers.maxParticleSpeed.setTo(400, 400);
+	    apexStickers.minParticleScale = 0.5;
+	    apexStickers.maxParticleScale = 1.5;
+            apexStickers.gravity = 0;
+	    apexStickers.bounce = 1;
+
+	    // display booch health bar
+	    healthBar = game.add.sprite(20,20, 'health_bar',0);
+	    healthBar.frame = 0; 
+	    healthBar.fixedToCamera = true;
+
+/*TROLL*/
+	    // Create the trolls
+	    troll = game.add.sprite(500,street.body.y -150, 'troll');
+	    troll.health = 2;
+	    troll.animations.add('moveLeft', [0,1,2],7, true);
+	    troll.animations.add('moveRight', [3,4,5],12, true);
+	    game.physics.enable(troll, Phaser.Physics.ARCADE);
+	    troll.body.collideWorldBounds = true;
+	    trolls = game.add.group();
+	    
+/*ALL_THE_THINGS*/
+
+	    // Create the 'all the things!' guys
+	    all_the_things = game.add.sprite(1600, street.body.y -150, 'all_the_things');
+	    all_the_things.health = 4;
+	    all_the_things.animations.add('moveLeft', [0,1],10, true);
+	    game.physics.enable(all_the_things, Phaser.Physics.ARCADE);
+	    all_the_things.body.collideWorldBounds = true;
+            allTheCreeping();
+        }
+
+function update(){
+
+        // Check to see if booch is a ghost, if not full alpha
+	if(booch.ghostTimer < game.time.now){booch.alpha = 1;} 
+
+        // Update the health bar
+	healthBar.frame = booch.health;
+
+        // Keep apexPreditor emulator on booch
+        apexStickers.x = booch.x + (booch.width/2); 
+        apexStickers.y = booch.y + (booch.height/2);	
+
+/*Collisions*/
+	
+	game.physics.arcade.collide(booch,platforms);
+	game.physics.arcade.collide(troll, platforms);
+	game.physics.arcade.collide(all_the_things, platforms);
+	
+	game.physics.arcade.overlap(booch,troll, baddyTouchesBooch, null, this);
+	game.physics.arcade.overlap(booch,all_the_things, baddyTouchesBooch, null, this);
+
+	game.physics.arcade.overlap(sprockets,troll, sprocketTouchesBaddy, null, this); // weaponize the sprocket
+	game.physics.arcade.overlap(sprockets, all_the_things, sprocketTouchesBaddy,null, this);
+        
+	game.physics.arcade.overlap(apexStickers, all_the_things, stickerTouchesBaddy, null, this);
+        game.physics.arcade.overlap(apexStickers, troll, stickerTouchesBaddy, null, this);
+
+        booch.body.velocity.x = 0;
+	    
+	    
+	    // Fire button
+	    if (fireKeyPressed || fireKey.isDown && booch.hitTimer < game.time.now)
+	    {
+
+              if(booch.powerMoves.poweredUp)
+	      {
+		sprockets.areFiring = false;
+		booch.powerMoves.buffer = game.time.now + 500;
+		booch.powerMoves.poweredUp = false;
+	        booch.powerMoves.timer = 0;	
+		apexPreditor();
+	      }
+	      else if(booch.powerMoves.buffer < game.time.now)
+	      {
+		sprockets.areFiring = true;
+	        fire_now();      
+	      }
+	      
+            }
+	    
+
+             // Jump button 
+	     if (jumpKey.isDown || jumpKeyPressed && booch.hitTimer < game.time.now)
+	     {	    
+	       if(booch.powerMoves.poweredUp)
+	       {
+		 booch.powerMoves.buffer = game.time.now + 500;
+	         booch.powerMoves.poweredUp = false;
+	         booch.powerMoves.timer = 0;
+		 juggernaut();
+	       }
+	       else if(booch.powerMoves.buffer < game.time.now && booch.body.touching.down && game.time.now > booch.jump.jumpTimer)
+               {
+		jump_sound.play();       
+		booch.body.velocity.y = -500;
+	        booch.jump.jumpTimer = game.time.now + 750;
+	       }
+	     }
+	     
+	     //Cursor arrows
+	     cursors.down.onUp.add(function(){booch.powerMoves.timer = 0; booch.powerMoves.poweredUp = false;});	  
+	     cursors.down.onDown.add(function()
+	     {
+	       booch.animations.stop();
+	       booch.powerMoves.timer = game.time.now + 1000
+	     });
+
+	    // If booch is hit, kick him away from the direction he was going and make him wince. 
+	    if(booch.hitTimer > game.time.now)
+	    {
+	       booch.body.velocity.x = (booch.direction == 'left'? 40: -40);
+	       booch.frame = 19;
+	    }	    
+	    else if(cursors.down.isDown)   
+            {
+	       if(booch.powerMoves.timer != 0 && game.time.now > booch.powerMoves.timer)
+	       {
+		     booch.animations.play('powerUp');
+		     booch.powerMoves.poweredUp = true;
+	       }
+	       else{ 
+	        booch.frame = 9;
+	       }  
+            }
+	    else if (cursors.right.isDown)
+	    {
+	      booch.animations.play(sprockets.areFiring? 'right_shoot' : 'right_run');
+	      booch.body.velocity.x = 150;
+              booch.direction = 'right';
+	    }
+	    else if (cursors.left.isDown)
+	    {
+              booch.animations.play(sprockets.areFiring? 'left_shoot' : 'left_run');
+	      booch.body.velocity.x = -150;
+	      booch.direction = 'left';
+	    }
+	    else
+            {
+              booch.animations.stop();
+	      if(sprockets.areFiring){
+	         booch.frame = (booch.direction == 'left')? 5:0;
+	      }
+	      else
+	      { 
+	      booch.frame = 4;
+	      }
+	    }
+        
+
+/*Baddies*/
+
+	// Trolls! 
+	if(troll.body.x >  booch.body.x)
+	{
+	  troll.body.velocity.x = -80;
+	  troll.animations.play('moveLeft');
+	}
+	else
+	{	
+	 
+	  troll.body.velocity.x =80;
+   	  troll.animations.play('moveRight');	  
+	}
+	
+}
+        // 'all the things!' guy creeps, and spits all the things.
+        function allTheCreeping(){
+	    all_the_things.animations.play('moveLeft');
+	    all_the_things.body.velocity.x = -200;
+	    setTimeout(function(){all_the_things.body.velocity.x = 0; all_the_things.animations.stop(); all_the_things.frame = 2;}, 1500, setTimeout(function(){allTheCreeping()}, 2500)) ;
+	}	    
+
+
+
+	// Booch can power leap. 
+	function juggernaut() {
+	  juggernaut_sound.play();
+	  booch.body.velocity.y = -1400;
+	}
+        
+	// Booch makes it rain (deadly) ZLA stickers on the bad guys. 
+        function apexPreditor(){
+	  apex_preditor_sound.play();
+
+	  apexStickers.start(false, 3000, 20, 105);
+	}	
+
+		
+        // Booch throws sprockets 
+        function fire_now() {
+          if (game.time.now > sprockets.nextFire)
+	  {
+            sprockets.nextFire = game.time.now + sprockets.fireRate;
+            var sprocket = sprockets.getFirstExists(false);
+
+	    if (sprocket)
+	    {
+              sprocket.exists = true;
+              shoot_sound.play();
+              sprocket.lifespan = 2500; 
+
+	      if(booch.direction == 'left')
+	      { 
+                sprocket.reset(booch.x -25, (Math.floor(booch.y + booch.height / 2) - Math.floor(sprocket.height / 2) ));
+                game.physics.enable(sprocket, Phaser.Physics.ARCADE);
+                sprocket.body.allowGravity = false;
+                sprocket.body.velocity.x = -500;
+              }
+              else
+	      {
+                sprocket.reset(booch.x +95, (Math.floor(booch.y + booch.height / 2) - Math.floor(sprocket.height / 2) ));
+	        game.physics.enable(sprocket, Phaser.Physics.ARCADE);
+                sprocket.body.allowGravity = false;
+		sprocket.body.velocity.x = 500;
+	      }
+	      
+	      sprocket.body.setCircle(10);
+	    }
+	  }
+        }
+/*Collision functions*/
+
+      function baddyTouchesBooch(booch, baddy)
+      {
+	  if(booch.ghostTimer < game.time.now)
+	  {    	  
+	    hey.play();
+	    booch.damage(1);
+            booch.alpha = .4;
+            booch.ghostTimer = game.time.now + 1000;	    
+	    booch.hitTimer = game.time.now + 400;
+	  }
+ 
+      }	       
+
+      function sprocketTouchesBaddy(baddy, sprocket)
+      {
+      	  sprocket.destroy();  
+	  baddy.damage(1);
+      }
+      
+      function stickerTouchesBaddy(baddy, sticker)
+      {
+	  sticker.destroy();
+	  baddy.damage(2);
+      }	  
+
+};
+    </script>
+
+    </body>
+</html>

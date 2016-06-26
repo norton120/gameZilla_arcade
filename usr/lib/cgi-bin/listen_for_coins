@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# So here's the plan. Poll the coin slot i/o every 25ms (depending on how long
+# the relay closes per coin). If closed, sed the file coin_dropped "false" 
+# to "true". that's it. the capture_coins file will put the coin value 
+# into the game and reset the value to false. 
+

@@ -29,9 +29,6 @@ var loadState = {
 	  poll.open("GET",'/cgi-bin/capture_coins',true);
 	  poll.send();
         }
-
-
-	game.isTouchscreen = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
 	
 	// attempt to start the gamepad(s) 
 	game.input.gamepad.start();
@@ -78,6 +75,7 @@ var loadState = {
    game.physics.startSystem(Phaser.Physics.ARCADE);
    game.time.desiredFps = 30;
 
+   // these can all go. create on level, stage and character levels 
             // Create the global sound effects
 	    game.boochShootSound = game.add.audio('shoot');
 	    game.boochJuggernautSound = game.add.audio('juggernaut');
@@ -85,73 +83,76 @@ var loadState = {
 	    game.boochJumpSound = game.add.audio('jump');
 	    game.boochHeySound = game.add.audio('hey');
 
-/*CONTROLS*/
+/*PLAYERS*/
 	
-	// normalized player input values
-	game.controls = {};    
-	game.controls.rightPressed = false;
-	game.controls.leftPressed = false;
-	game.controls.upPressed = false;
-	game.controls.downPressed = false;
-	game.controls.jumpPressed = false;
-	game.controls.firePressed = false;
-	game.controls.fakeCoinPressed = false;
+	// Create the game player containers
+	game.players = [];
+
+	// Test controllers for connections
+  	for(x=1; x < 5; x++){
+            game.players['player'+x] = {};
+	}	
+
+/*CONTROLS*/
+
 
 	// detect if the gamepad was able to connect and is supported and active
-	game.padConnected = game.input.gamepad.supported && game.input.gamepad.active && game.input.gamepad.pad1.connected;
-     
+	game.padConnected = game.input.gamepad.supported && game.input.gamepad.active && (game.input.gamepad.pad1.connected || game.input.gamepad.pad2.connected || game.input.gamepad.pad3.connected || game.input.gamepad.pad4.connected);
+        
+	// normalized player input values
+	for(x=1; x<5; x++){
+	  var player = game.players['player'+x];	
+	  player.active = false;	
+	  player.controls = {};    
+	  player.controls.rightPressed = false;
+	  player.controls.leftPressed = false;
+	  player.controls.upPressed = false;
+	  player.controls.downPressed = false;
+	  player.controls.jumpPressed = false;
+	  player.controls.firePressed = false;
+	  player.controls.specialPressed = false;
+	  player.controls.playerStartPressed = false;
+	}
 
-        // default to keyboard controls - always available
+        // default keyboard controls - always available
 	game.cursors = game.input.keyboard.createCursorKeys();
 	game.jumpKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 	game.fireKey = game.input.keyboard.addKey(Phaser.Keyboard.X);
+	game.specialKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+	game.playerStartKey = game.input.keyboard.addKey(Phaser.Keyboard.P);
 	game.startKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 	   
-	// this lets us simulate dropping a coin with the "c" key
-	game.fakeCoin = game.input.keyboard.addKey(Phaser.Keyboard.C);
 	
 	game.updateInputKeyStates = function(){
+	  
 	  // if gamepad detected, listen for gamepad input
 	  if(game.padConnected)
 	  {
-	    game.controls.leftPressed = (game.input.gamepad.pad1._rawPad.axes[0] == -1);  	  
-	    game.controls.rightPressed = (game.input.gamepad.pad1._rawPad.axes[0] == 1);  	  
-	    game.controls.upPressed = (game.input.gamepad.pad1._rawPad.axes[1] == -1);  	  
-	    game.controls.downPressed = (game.input.gamepad.pad1._rawPad.axes[1] == 1);  	  
-	    game.controls.firePressed = (game.input.gamepad.pad1._rawPad.buttons[1].pressed);
-	    game.controls.jumpPressed = (game.input.gamepad.pad1._rawPad.buttons[2].pressed);
-	  }
+	    for(x=1; x<5; x++){	  
+	      if(game.input.gamepad['pad'+x].connected){	    
+	        var player = game.players['player'+x];
+	        var pad = 'pad'+x;
+	        player.controls.leftPressed = (game.input.gamepad[pad]._rawPad.axes[0] == -1);  	  
+	        player.controls.rightPressed = (game.input.gamepad[pad]._rawPad.axes[0] == 1);  	  
+	        player.controls.upPressed = (game.input.gamepad[pad]._rawPad.axes[1] == -1);  	  
+	        player.controls.downPressed = (game.input.gamepad[pad]._rawPad.axes[1] == 1);  	  
+	        player.controls.firePressed = (game.input.gamepad[pad]._rawPad.buttons[1].pressed);
+	        player.controls.jumpPressed = (game.input.gamepad[pad]._rawPad.buttons[2].pressed);
+	        player.controls.specialPressed = (game.input.gamepad[pad]._rawPad.buttons[3].pressed);
+	    	player.controls.playerStartPressed = (game.input.gamepad[pad]._rawPad.buttons[4].pressed);
+	      }
+	    }
+	  }  
 	  else
 	  {
-	    game.controls.leftPressed = (game.cursors.left.isDown);
-  	    game.controls.rightPressed = (game.cursors.right.isDown);
-	    game.controls.upPressed = (game.cursors.up.isDown);
-  	    game.controls.downPressed = (game.cursors.down.isDown);
-	    game.controls.firePressed = (game.fireKey.isDown);
-	    game.controls.jumpPressed = (game.jumpKey.isDown);	    
+	    game.players.player1.controls.leftPressed = (game.cursors.left.isDown);
+  	    game.players.player1.controls.rightPressed = (game.cursors.right.isDown);
+	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
+  	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
+	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
+	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	    
 	  }
-	  game.controls.fakeCoinPressed = (game.fakeCoin.isDown); 
 	};	
-
-/*MOBILE CONTROLS*/
-game.enableMobileControls = function(){
-
-  var createMobileButton = function(direction, x, y, image){
-    key = direction+'Key';
-    game[key] = game.add.button(x,y,image,null,this,0,1,0,1);
-    game[key].fixedToCamera = true;
-    game[key].onInputDown.add(function(){game.controls[direction+'Pressed'] = true;});
-    game[key].onInputUp.add(function(){game.controls[direction+'Pressed'] = false;});
-  }
-
-  createMobileButton('jump',game.camera.width -125, game.camera.height -110, 'z_button');
-  createMobileButton('fire',game.camera.width -250, game.camera.height -110, 'x_button');
-  createMobileButton('up', 125, game.camera.height -155, 'cursor_button');
-  createMobileButton('down', 125, game.camera.height -75, 'cursor_button');
-  createMobileButton('left', 90, game.camera.height -115, 'cursor_button');
-  createMobileButton('right',160, game.camera.height -115, 'cursor_button');
-  
-};
 
 	// start the intro story
 	game.state.start('introStory');

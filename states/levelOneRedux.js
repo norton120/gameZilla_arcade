@@ -46,22 +46,21 @@ var levelOneState = {
     if(!this.hero.jumping){this.hero.body.velocity.y = 0;}
 
     // fire key
-    if(game.controls.firePressed){this.hero.isFiring; this.hero.fire();} 
+    if(game.players.player1.controls.firePressed){this.hero.isFiring; this.hero.fire();} 
     
     // jump key
-    if(game.controls.jumpPressed){this.hero.jump();}	
+    if(game.players.player1.controls.jumpPressed){this.hero.jump();}	
 
     // Z-axis cursors
-    if(game.controls.downPressed && !this.hero.jumping && (this.hero.feet() < (this.street.bottom -30))){this.hero.moveDown();}
+    if(game.players.player1.controls.downPressed && !this.hero.jumping && (this.hero.feet() < (this.street.bottom -30))){this.hero.moveDown();}
    
-    if(game.controls.upPressed && !this.hero.jumping && (this.hero.feet() > (this.street.top +30))){this.hero.moveUp();}
-
+    if(game.players.player1.controls.upPressed && !this.hero.jumping && (this.hero.feet() > (this.street.top +30))){this.hero.moveUp();}
 
     // X-axis cursor keys
-    if(game.controls.rightPressed){
+    if(game.players.player1.controls.rightPressed){
       this.hero.run('right',this.hero.isFiring);	    
     }
-    else if(game.controls.leftPressed){
+    else if(game.players.player1.controls.leftPressed){
       this.hero.run('left',this.hero.isFiring);	    
     } 
     else

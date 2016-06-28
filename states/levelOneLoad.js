@@ -89,7 +89,6 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
       if(!this.jumping){
 	this.jumping = true;
 	start = this.avatar.body.y;   
-	console.log(start);
         this.shadow.visible = true;
 	
 	jUp = game.add.tween(this.avatar.body).to({y: (this.avatar.body.y -155)}, 105, Phaser.Easing.Linear.In);

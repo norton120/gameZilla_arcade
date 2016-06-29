@@ -68,6 +68,9 @@ var loadState = {
 	    game.load.spritesheet('booch', 'assets/images/anthony_sprite.png',119.5,140);
 	    game.load.spritesheet('troll', 'assets/images/troll_sprite.png',95.5,119);
 	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
+	    game.load.spritesheet('hudPlayer1', 'assets/images/hud_player_1.png',340,100);
+	    game.load.spritesheet('hudPlayer2', 'assets/images/hud_player_2.png',340,100);
+	    game.load.spritesheet('hudPlayer3', 'assets/images/hud_player_3.png',340,100);
 	},
 
  create: function(){
@@ -103,6 +106,8 @@ var loadState = {
 	for(x=1; x<5; x++){
 	  var player = game.players['player'+x];	
 	  player.active = false;	
+	  player.hero ={};
+	  player.playerSelected = "";
 	  player.controls = {};    
 	  player.controls.rightPressed = false;
 	  player.controls.leftPressed = false;

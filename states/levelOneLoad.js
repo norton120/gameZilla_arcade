@@ -5,8 +5,7 @@ preload: function(){
 // 'loading' text and spinner
 game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'});
 	
-/*Base prototypes*/
-  /*Weapon base prototype*/
+/*Weapon base prototype*/
   Weapon = function(game,origin,directionOwner,sprite){
     this.weaponStore = game.add.group();
     
@@ -32,7 +31,38 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     return this;
   } 
 
-  /*Hero base prototype*/
+
+/*HUD prototype*/
+  HUD = function(game, name, player, x, y){
+    this.container = game.add.sprite(x,y);	   
+    this.health = game.add.sprite(10,30,'health_bar',player.health);
+    this.container.addChild(this.health);
+    this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#fefefe'});
+    this.lives = game.add.text(80,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#fefefe"});
+    
+    this.scoreText = function(score){
+      var result = "00000000"+score;
+      return result.substr(result.length-8);
+    }
+
+    this.score = game.add.text(12,60, this.scoreText(player.points), {font:'1rem Press Start 2P', fill:"#fefefe"});
+    this.container.addChild(this.score);
+    this.container.addChild(this.lives);
+    this.container.addChild(this.name);
+    this.container.fixedToCamera = true;   
+    
+    this.update = function(){
+      this.health.frame = player.health;
+      this.lives.setText(" X"+player.lives);      
+      this.score.setText(this.scoreText(player.points));
+    } 
+    
+
+    return this;   
+  }
+
+
+/*Hero base prototype*/
   // @param {obj} game the game object
   // @param {int} x the starting x coordinate of the sprite
   // @param {int} y the starting y coordinate of the sprite
@@ -46,16 +76,18 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.addChild(this.shadow);
     this.shadow.scale.setTo(.5,.5);
     this.shadow.visible = false;
-    this.avatar = game.add.sprite(0,0, spriteSheet);
+    this.avatar = game.add. sprite(0,0, spriteSheet);
     this.addChild(this.avatar);
     game.physics.enable(this.avatar, Phaser.Physics.ARCADE);
     game.camera.follow(this);
 
     // Base props
+    this.points = 0;
+    this.health = 5;
+    this.lives = 3; 
     this.isFiring = false;
     this.actionSpeed = 150*speed;
     this.direction = 'right';
-    this.jumpTimer = 0;
     this.jumping = false;
 
     // Calculated Props
@@ -118,7 +150,6 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 
     // weapons
     this.primaryWeapon = new Weapon(game,this.avatar,this,'sprocket'); 
-    
 
   }
   Hero.prototype = Object.create(Phaser.Sprite.prototype);

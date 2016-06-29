@@ -39,7 +39,7 @@ create: function(){
   game.players.player1.active =1;
   // Player select glowing frame
   var playerCount = 0;
-  for(x=1;x<5;x++){
+  for(x=1;x<4;x++){
     if(game.players['player'+x].active){playerCount++;}
   }
 

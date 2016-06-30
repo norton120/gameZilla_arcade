@@ -11,10 +11,18 @@ var levelOneState = {
 
     this.street.enableBody = true;
 
+    // group for the depth sorting
+    this.actors = game.add.group();
+
     //TODO:replace this shim with actual player selection from the previous state
     game.players.player1.active =true;
     game.players.player1.playerSelected = 'booch';
-    
+  
+    game.players.player2.active =true;
+    game.players.player2.playerSelected = 'matt';  
+
+    game.players.player3.active = true;
+    game.players.player3.playerSelected = 'nick';
 /*Players*/
 
     // cycle through players, if active set character
@@ -29,12 +37,12 @@ var levelOneState = {
         break;
       
         case 'matt':
-          player.hero = new Matt(game,100,568);
+          player.hero = new Matt(game,100,468);
           game.add.existing(player.hero);
         break;
 
         case 'nick':
-          player.hero = new Matt(game,100,568);
+          player.hero = new Matt(game,100,368);
           game.add.existing(player.hero);
         break;
 
@@ -43,19 +51,48 @@ var levelOneState = {
         break;
         }
 
-	player.hud = new HUD(game, player.playerSelected, player.hero, 10,10);
-
+	player.hud = new HUD(game, player.playerSelected, player.hero, (x-1)*340+10 ,10);
+         
+	this.actors.add(player.hero);
 
       }	      
 
     }	
-
   },
   update: function(){
 
     // normalize the gamepad inputs	  
     game.updateInputKeyStates();	  
     
+    // depth sort the players
+    this.actors.sort('y',Phaser.Group.SORT_ASCENDING);
+
+    // adjust camera for multiplayers
+    (function(){
+      var players = [];
+      for (x=1;x<4; x++){
+ 	if(game.players['player'+x].active){players.push(game.players['player'+x]);}      
+      }	      
+
+      var heros = [];	    
+      // follow player to the right
+      for(x=0;x<players.length;x++){
+        heros.push(players[x].hero);
+      }  
+      game.moveCamera(heros);
+     
+      //TODO: fix this! need to find the left and right player, lock them out when they are too far apart
+      if(players.length > 1){
+	// more room before scrolling for play      
+        game.camera.deadzone = new Phaser.Rectangle(20,20,1000,700);
+        // set movement freeze to keep all players inbounds
+	game.freezePlayers(heros); 
+      }
+
+    })();
+
+    
+
 /*Player Controls*/
     for(x=1; x<4; x++){
       if(game.players['player'+x].active){
@@ -78,7 +115,7 @@ var levelOneState = {
         if(player.controls.upPressed && !player.hero.jumping && (player.hero.feet() > (this.street.top +30))){player.hero.moveUp();}
 
         // X-axis cursor keys
-        if(player.controls.rightPressed){
+        if(player.controls.rightPressed && !player.hero.rightFreeze){
           player.hero.run('right',player.hero.isFiring);	    
         }
         else if(player.controls.leftPressed){

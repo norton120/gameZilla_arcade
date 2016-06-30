@@ -89,6 +89,8 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.actionSpeed = 150*speed;
     this.direction = 'right';
     this.jumping = false;
+    this.leftFreeze = false;
+    this.rightFreeze = false;
 
     // Calculated Props
     this.feet = function(){return(this.avatar.world.y + this.avatar.height);}
@@ -181,6 +183,31 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 		  }	  
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;
+
+
+/* Camera follow for multiple players */		  
+game.moveCamera = function(players){
+  var following = players[0];
+  for(x=0; x<players.length; x++){ 
+    if(players[x].x > following.x){ following = players[x]; }
+  }
+
+ game.camera.follow(following);
+}
+/* Freeze players when they get to far apart for camera */
+game.freezePlayers = function(players){
+  var leftPlayer = players[0];
+  var rightPlayer = players[0];
+  for(x=0;x<players.length; x++){
+    if(players[x].world.x > rightPlayer.world.x){rightPlayer = players[x];}
+    if(players[x].world.x < leftPlayer.world.x){leftPlayer = players[x];}
+  }
+  if(rightPlayer.world.x - leftPlayer.world.x >900){
+    rightPlayer.rightFreeze = true;
+    leftPlayer.leftFreeze = true;
+  }
+}
+
 },
 
 create: function(){

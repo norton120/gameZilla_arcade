@@ -202,7 +202,7 @@ game.freezePlayers = function(players){
     if(players[x].world.x > rightPlayer.world.x){rightPlayer = players[x];}
     if(players[x].world.x < leftPlayer.world.x){leftPlayer = players[x];}
   }
-  if(rightPlayer.world.x - leftPlayer.world.x >900){
+  if(rightPlayer.world.x - leftPlayer.world.x >800){
     rightPlayer.rightFreeze = true;
     leftPlayer.leftFreeze = true;
   }

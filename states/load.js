@@ -139,8 +139,8 @@ var loadState = {
 	        var pad = 'pad'+x;
 	        player.controls.leftPressed = (game.input.gamepad[pad]._rawPad.axes[0] == -1);  	  
 	        player.controls.rightPressed = (game.input.gamepad[pad]._rawPad.axes[0] == 1);  	  
-	        player.controls.upPressed = (game.input.gamepad[pad]._rawPad.axes[1] == -1);  	  
-	        player.controls.downPressed = (game.input.gamepad[pad]._rawPad.axes[1] == 1);  	  
+	        player.controls.upPressed = (game.input.gamepad[pad]._rawPad.axes[2] == -1);  	  
+	        player.controls.downPressed = (game.input.gamepad[pad]._rawPad.axes[2] == 1);  	  
 	        player.controls.firePressed = (game.input.gamepad[pad]._rawPad.buttons[1].pressed);
 	        player.controls.jumpPressed = (game.input.gamepad[pad]._rawPad.buttons[2].pressed);
 	        player.controls.specialPressed = (game.input.gamepad[pad]._rawPad.buttons[3].pressed);

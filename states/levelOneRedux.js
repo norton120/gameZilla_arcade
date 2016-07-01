@@ -83,8 +83,9 @@ var levelOneState = {
      
       //TODO: fix this! need to find the left and right player, lock them out when they are too far apart
       if(players.length > 1){
+	players.map(function(p){p.hero.rightFreeze = false;p.hero.leftFreeze = false;}); 
 	// more room before scrolling for play      
-        game.camera.deadzone = new Phaser.Rectangle(20,20,1000,700);
+        game.camera.deadzone = new Phaser.Rectangle(20,20,800,700);
         // set movement freeze to keep all players inbounds
 	game.freezePlayers(heros); 
       }

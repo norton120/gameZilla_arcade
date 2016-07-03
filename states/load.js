@@ -65,12 +65,14 @@ var loadState = {
 	    game.load.image('shadow','assets/images/shadow.png');
 	    game.load.image('cursor_button','assets/images/cursor_button.png',58,58);
 	    game.load.spritesheet('health_bar', 'assets/images/health_bar.png',123.8,25);
-	    game.load.spritesheet('booch', 'assets/images/anthony_sprite.png',119.5,140);
 	    game.load.spritesheet('troll', 'assets/images/troll_sprite.png',95.5,119);
 	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
 	    game.load.spritesheet('hudPlayer1', 'assets/images/hud_player_1.png',340,100);
 	    game.load.spritesheet('hudPlayer2', 'assets/images/hud_player_2.png',340,100);
 	    game.load.spritesheet('hudPlayer3', 'assets/images/hud_player_3.png',340,100);
+
+	    game.load.atlasJSONHash('booch','assets/images/textureAtlas/booch_pixelated_50_percent_reduction.png','assets/images/textureAtlas/booch.json');
+
 	},
 
  create: function(){
@@ -90,24 +92,26 @@ var loadState = {
 	
 	// Create the game player containers
 	game.players = [];
-
-	// Test controllers for connections
-  	for(x=1; x < 5; x++){
+  	for(x=1; x < 4; x++){
             game.players['player'+x] = {};
 	}	
+
+	// name them
+	game.players.player1.displayName = 'Matt';
+	game.players.player2.displayName = 'Nick';
+	game.players.player3.displayName = 'Anthony';
 
 /*CONTROLS*/
 
 
 	// detect if the gamepad was able to connect and is supported and active
-	game.padConnected = game.input.gamepad.supported && game.input.gamepad.active && (game.input.gamepad.pad1.connected || game.input.gamepad.pad2.connected || game.input.gamepad.pad3.connected || game.input.gamepad.pad4.connected);
+	game.padConnected = game.input.gamepad.supported && game.input.gamepad.active && (game.input.gamepad.pad1.connected || game.input.gamepad.pad2.connected || game.input.gamepad.pad3.connected);
         
 	// normalized player input values
-	for(x=1; x<5; x++){
+	for(x=1; x<4; x++){
 	  var player = game.players['player'+x];	
 	  player.active = false;	
 	  player.hero ={};
-	  player.playerSelected = "";
 	  player.controls = {};    
 	  player.controls.rightPressed = false;
 	  player.controls.leftPressed = false;
@@ -116,7 +120,7 @@ var loadState = {
 	  player.controls.jumpPressed = false;
 	  player.controls.firePressed = false;
 	  player.controls.specialPressed = false;
-	  player.controls.playerStartPressed = false;
+	  player.controls.startPressed = false;
 	}
 
         // default keyboard controls - always available
@@ -124,8 +128,11 @@ var loadState = {
 	game.jumpKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 	game.fireKey = game.input.keyboard.addKey(Phaser.Keyboard.X);
 	game.specialKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
-	game.playerStartKey = game.input.keyboard.addKey(Phaser.Keyboard.P);
-	game.startKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+	game.p1StartKey = game.input.keyboard.addKey(Phaser.Keyboard.M);
+	game.p2StartKey = game.input.keyboard.addKey(Phaser.Keyboard.N);
+	game.p3StartKey = game.input.keyboard.addKey(Phaser.Keyboard.A);
+	   
+	   
 	   
 	
 	game.updateInputKeyStates = function(){
@@ -144,7 +151,7 @@ var loadState = {
 	        player.controls.firePressed = (game.input.gamepad[pad]._rawPad.buttons[1].pressed);
 	        player.controls.jumpPressed = (game.input.gamepad[pad]._rawPad.buttons[2].pressed);
 	        player.controls.specialPressed = (game.input.gamepad[pad]._rawPad.buttons[3].pressed);
-	    	player.controls.playerStartPressed = (game.input.gamepad[pad]._rawPad.buttons[4].pressed);
+	    	player.controls.startPressed = (game.input.gamepad[pad]._rawPad.buttons[4].pressed);
 	      }
 	    }
 	  }  
@@ -155,12 +162,24 @@ var loadState = {
 	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
   	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
 	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
-	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	    
+	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
+
+ 	    // add fake start keys for the 3 players
+	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
+	    game.players.player2.controls.startPressed = (game.p2StartKey.isDown);
+	    game.players.player3.controls.startPressed = (game.p3StartKey.isDown);
+	    
 	  }
 	};	
 
 
+	// global font setter. 
+	game.setFont = function(size,color){
+	  return({font: size+' Press Start 2P',fill: color});
+	}
+
 	// start the intro story
 	game.state.start('introStory');
  }
+
 };

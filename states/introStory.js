@@ -25,7 +25,12 @@ create: function(){
 
 },
 update:function(){
-  game.startKey.onDown.addOnce(this.toMenu);
+ game.updateInputKeyStates();
+
+  for(x=1; x<4; x++){
+    var player = game.players['player'+x];
+    if(player.controls.startPressed){this.toMenu();}    
+  }	  
 },
 
 toMenu: function(){

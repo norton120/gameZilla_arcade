@@ -30,15 +30,9 @@ var levelOneState = {
       }	      
 
     }	
-
-/*Listeners*/
-    if(!game.hardwareInterface.coinMode.freePlay){
-      	    
-      game.time.events.loop(500,game.checkForCoins,this);
-      game.time.events.loop(500,function(){console.log(game.coinCredit)},this);
-    }
   },
   update: function(){
+
     // normalize the gamepad inputs	  
     game.updateInputKeyStates();	  
     
@@ -107,7 +101,7 @@ var levelOneState = {
 	    player.hero.moveLeft();	  
 	  }
 	  else{	  
-            player.hero.run('left',player.hero.isFiring, player.hero.leftFreeze);	    
+            player.hero.run('left',player.hero.isFiring);	    
         
 	  }
 	}  
@@ -115,14 +109,14 @@ var levelOneState = {
         {
           player.hero.standStill();	    
         }
+
+        // update HUD
+	player.hud.update();
       }
-      else if(player.controls.startPressed && (game.hardwareInterface.coinMode.freePlay || game.coinCredit>0)){
-	player.hud.container.destroy();
-        this.addPlayerToGame(game,player,player.displayName, game.camera.target.x, 348); 
-	game.coinCredit--;
-      }
-      // update the top bar HUD's
-      player.hud.update();      
+      else if(player.controls.startPressed){
+	player.hud.container.destroy();      
+        this.addPlayerToGame(game,player,player.displayName, game.camera.target.x -200, 348); 
+      }	
     }
 
 
@@ -137,12 +131,10 @@ insertHero: function(player, x, y){
 },  
 
 addPlayerToGame: function(game,player, character, x, y){
-  player.active = true;
   var hudX;	
   switch (character){
     case 'Anthony':
      player.hero = new Anthony(game,x, y);
-     player.hero.visible = false;
      game.add.existing(player.hero);
      hudX = 2;
      break;
@@ -159,13 +151,15 @@ addPlayerToGame: function(game,player, character, x, y){
      hudX =1;
      break;
   }
- this.actors.add(player.hero); 
+ player.active = true; 
  player.hud = new HUD(game, player.displayName, player.hero, (hudX)*340+10 ,10);
+ this.actors.add(player.hero);
  this.ghostIn(player.hero);
- game.time.events.add(400, function(){player.hero.visible = true;},this); 
+
+
 },
 ghostIn: function(hero){
-  var time = 100;	
+  time = 100;	
   game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.ghost= !hero.ghost; time=Math.floor(time*.5);},this)},this);
   game.time.events.add(3500, function(){hero.ghost=false;});
 }

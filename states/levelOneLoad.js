@@ -6,7 +6,7 @@ preload: function(){
 game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'});
 	
 /*Weapon base prototype*/
-  Weapon = function(game,origin,directionOwner,sprite){
+  Weapon = function(game,origin,sprite){
     this.weaponStore = game.add.group();
     
     this.weaponStore.createMultiple(200,sprite,0,false);
@@ -17,14 +17,14 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.projectileSpeed = 500;
     this.projectileLifespan = 2500;
     
-    this.fire = function(){
+    this.fire = function(direction){
       if(this.nextFire < game.time.time){
         
 	var projectile = this.weaponStore.getFirstExists(false); 
-	projectile.reset(((directionOwner.direction == 'left')? origin.world.x : origin.world.x + origin.width), origin.world.y + (origin.height /2.5));
+	projectile.reset(((direction == 'left')? origin.world.x - 50 : origin.world.x + origin.width), origin.world.y + (origin.height /2.5));
 	projectile.exists = true;
 	projectile.lifeSpan = this.projectileLifespan;
-	projectile.body.velocity.x = (directionOwner.direction == 'left')? (this.projectileSpeed * -1):this.projectileSpeed;
+	projectile.body.velocity.x = (direction == 'left')? (this.projectileSpeed * -1):this.projectileSpeed;
 	this.nextFire = game.time.time + this.fireRate;	
       }  
     }
@@ -38,7 +38,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.health = game.add.sprite(10,30,'health_bar',player.health);
     this.container.addChild(this.health);
     this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#fefefe'});
-    this.lives = game.add.text(80,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#fefefe"});
+    this.lives = game.add.text(this.name.width+10,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#fefefe"});
     
     this.scoreText = function(score){
       var result = "00000000"+score;
@@ -61,6 +61,39 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     return this;   
   }
 
+/*HUD placeholder prototype*/
+  HUDPlaceholder = function(game, name, x,y){
+    this.container = game.add.sprite(x,y);
+    this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#fefefe'));
+    var message = game.hardwareInterface.coinMode.freePlay? " PRESS START":(game.coinCredit > 0? " PRESS START":" INSERT COIN");
+    this.message = game.add.text(0,20,message, game.setFont('1rem','#fefefe'));
+    this.container.addChild(this.name);
+    this.container.addChild(this.message);
+    this.container.fixedToCamera = true;
+    this.flashTimer = 0;
+    this.update = function(){
+      if(!game.hardwareInterface.coinMode.freePlay){
+        var text = "INSERT COIN";
+	var flashing = false;
+        if(game.coinCredit > 0){
+	  text = "PRESS START";
+	  flashing = true;
+        }		
+        this.message.setText(text);
+        if(flashing){
+	  if (game.time.time > this.flashTimer){
+	    this.message.alpha = this.message.alpha == 0? 1:0;
+	    this.flashTimer = game.time.time+300;
+	  }
+	}  
+	else{
+	  this.message.alpha = 1;	  
+	}	  
+      }
+    }
+
+    return this;
+  }
 
 /*Hero base prototype*/
   // @param {obj} game the game object
@@ -85,8 +118,9 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.points = 0;
     this.health = 5;
     this.lives = 3; 
+    this.ghost = true;
     this.isFiring = false;
-    this.actionSpeed = 150*speed;
+    this.actionSpeed = 170*speed;
     this.direction = 'right';
     this.jumping = false;
     this.leftFreeze = false;
@@ -96,19 +130,24 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.feet = function(){return(this.avatar.world.y + this.avatar.height);}
 
     // animations11
-    this.avatar.animations.add('runRight',[13,14,15],8, true);
-    this.avatar.animations.add('runLeft',[16,17,18],8, true);
-    this.avatar.animations.add('shootRight', [0,1,2,3],8, true);
-    this.avatar.animations.add('shootLeft', [5,6,7,8],8, true);
-    this.avatar.animations.add('powerUp', [10,11,12],10, true);
+    //this.avatar.animations.add('runRight',[13,14,15],8, true);
+    this.avatar.animations.add('runRight', Phaser.Animation.generateFrameNames('run_right_', 1,8), 12, true);
+    this.avatar.animations.add('runLeft', Phaser.Animation.generateFrameNames('run_left_', 1,8), 12, true);
+    this.avatar.animations.add('jumpStartRight', Phaser.Animation.generateFrameNames('jump_right_', 1,2), 16, false);
+    this.avatar.animations.add('jumpLandRight', Phaser.Animation.generateFrameNames('land_right_', 1,5), 18, false);
+    this.avatar.animations.add('jumpStartLeft', Phaser.Animation.generateFrameNames('jump_left_', 1,2), 16, false);
+    this.avatar.animations.add('jumpLandLeft', Phaser.Animation.generateFrameNames('land_left_', 1,5), 18, false);
+    // keep a reference to these, since they need callbacks
+    var fireLeft = this.avatar.animations.add('fireLeft', Phaser.Animation.generateFrameNames('fire_left_',1,4),18,false);
+    var fireRight = this.avatar.animations.add('fireRight', Phaser.Animation.generateFrameNames('fire_right_',1,4),18,false);
   
     // actions
 
-    this.run =function(direction, shooting){
+    this.run =function(direction, shooting, frozen){
       this.direction = direction;
       animation = (shooting? 'shoot' : 'run') + direction.charAt(0).toUpperCase() + direction.slice(1);
       this.avatar.animations.play(animation);	
-      this.body.velocity.x = (direction == 'right'? this.actionSpeed : this.actionSpeed*-1);
+      if(!frozen){this.body.velocity.x = (direction == 'right'? this.actionSpeed : this.actionSpeed*-1);}
     }
     
     this.moveDown = function(){
@@ -119,8 +158,24 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
       this.body.velocity.y = -100;
     }
 
+    this.moveLeft = function(){
+      if(!this.leftFreeze){	    
+        this.body.velocity.x = this.actionSpeed * -1;
+        this.direction = 'left';
+      }      
+    }
+
+    this.moveRight = function(){
+      if(!this.rightFreeze){
+        this.body.velocity.x = this.actionSpeed;
+        this.direction = 'right';
+      }
+    }
+
     this.jump = function(){
       if(!this.jumping){
+	var dir = this.direction.charAt(0).toUpperCase() + this.direction.slice(1);      
+	this.avatar.animations.play('jumpStart'+dir);      
 	this.jumping = true;
 	start = this.avatar.body.y;   
         this.shadow.visible = true;
@@ -128,9 +183,9 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 	jUp = game.add.tween(this.avatar.body).to({y: (this.avatar.body.y -155)}, 105, Phaser.Easing.Linear.In);
 	jDown = game.add.tween(this.avatar.body).to({y: start}, 135, Phaser.Easing.Linear.Out);
 
-	game.time.events.add(650, function(){this.jumping = false;}, this);
+	game.time.events.add(850, function(){this.jumping = false;}, this);
 	game.time.events.add(550, function(){this.shadow.visible = false;},this);
-
+        game.time.events.add(450, function(){this.avatar.animations.play('jumpLand'+dir);},this);
 	resetStart = function(){this.avatar.body.y= start;}
 
 	jDown.onComplete.add(resetStart, this);
@@ -142,16 +197,21 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 
     this.standStill = function(){
       this.avatar.animations.stop();
-      this.avatar.frame = 4;
+      this.avatar.frameName = this.direction == 'right'? "stand_right": "stand_left";
     }
 
     this.fire = function(){
-      this.primaryWeapon.fire();
+      if(!this.isFiring){	    
+        this.isFiring = true;	    
+        var anim = this.direction == 'right'? fireRight:fireLeft;
+        anim.play();
+        anim.onComplete.add(function(){this.primaryWeapon.fire(this.direction); this.isFiring = false;},this);	    
+      }	
     }
 
 
     // weapons
-    this.primaryWeapon = new Weapon(game,this.avatar,this,'sprocket'); 
+    this.primaryWeapon = new Weapon(game,this.avatar,'sprocket'); 
 
   }
   Hero.prototype = Object.create(Phaser.Sprite.prototype);
@@ -164,11 +224,11 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 
 	  // Heros
 		/*Booch*/  
-		  Booch = function(game, x, y){
+		  Anthony = function(game, x, y){
 		    Hero.call(this, game, x, y, 'booch',1);
 		  }
-		  Booch.prototype = Object.create(Hero.prototype);
-		  Booch.prototype.constructor = Booch;
+		  Anthony.prototype = Object.create(Hero.prototype);
+		 Anthony.prototype.constructor = Anthony;
 
 		/*Matt*/
 		  Matt = function(game, x, y){

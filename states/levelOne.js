@@ -5,7 +5,7 @@ var levelOneState = {
     game.world.setBounds(0,0,4000,768);
     game.stage.backgroundColor = "#7EC0EE";
     
-    /*create Platforms*/
+/*Platforms*/
     this.street = game.add.tileSprite(0,468, 4000, 300, 'concrete');
     game.physics.enable(this.street, Phaser.Physics.ARCADE);
 
@@ -20,7 +20,7 @@ var levelOneState = {
     for(x=1; x<4; x++){
       var player = game.players['player'+x];
       if(player.active){
-        this.addPlayerToGame(game,player,player.displayName,100,368+(x*100));            
+        this.addPlayerToGame(game,player,player.displayName,100,308+(x*100));            
 
 
       }
@@ -30,21 +30,53 @@ var levelOneState = {
       }	      
 
     }	
-
+      
 /*Listeners*/
     if(!game.hardwareInterface.coinMode.freePlay){
       	    
       game.time.events.loop(500,game.checkForCoins,this);
       game.time.events.loop(500,function(){console.log(game.coinCredit)},this);
     }
+
+/*triggers for baddies to drop in*/
+  // note: I'm making baddies on the fly, since we need
+  // the actors group for depth sorting, and sprites can only
+  // be in one group.
+
+    // 2 trolls initially
+    this.trolls = [];
+    for(x=0;x<2;x++){
+      troll = new Troll(game, 750, 400+(x*170));
+      this.actors.add(troll);
+      this.trolls.push(troll);
+    }
   },
   update: function(){
+    // create the array of active players
+    this.activePlayers =[];
+    for(x=1;x<4;x++){
+      if(game.players['player'+x].active){
+        this.activePlayers.push(game.players['player'+x]);
+      }		
+    }    
     // normalize the gamepad inputs	  
     game.updateInputKeyStates();	  
     
     // depth sort the players
     this.actors.sort('y',Phaser.Group.SORT_ASCENDING);
 
+/*collisions*/
+    // depth sort
+    game.physics.arcade.collide(this.actors);
+    // create an array of heros for collisions
+    this.activePlayerHeros = [];
+    for(x=0;x<this.activePlayers.length; x++){
+      this.activePlayerHeros.push(this.activePlayers[x].hero.avatar);
+    }
+    for(x=0;x<this.trolls.length;x++){
+      game.physics.arcade.overlap(this.activePlayerHeros, this.trolls[x].avatar,function(h,b){this.hitPlayer(h.parent, 1);},null,this);
+
+    }
     // adjust camera for multiplayers
     (function(){
       var players = [];
@@ -74,7 +106,7 @@ var levelOneState = {
 /*Player Controls and apperance*/
     for(x=1; x<4; x++){
       var player = game.players['player'+x];    
-      if(player.active){
+      if(player.active && !player.hero.isHit){
 	player.hero.alpha = player.hero.ghost? .4 : 1;	
  
         // start each pass 0 velocity
@@ -125,8 +157,12 @@ var levelOneState = {
       player.hud.update();      
     }
 
-
-
+/*Baddie AI*/
+     this.trolls.map(function(troll){
+      var players = [];
+      for(x=1;x<3;x++){if(game.players['player'+x].active){players.push(game.players['player'+x].hero);}}	     
+      if(troll.exists){ troll.AI('left',true,players);}
+     });
   },
 
 insertHero: function(player, x, y){
@@ -168,8 +204,12 @@ ghostIn: function(hero){
   var time = 100;	
   game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.ghost= !hero.ghost; time=Math.floor(time*.5);},this)},this);
   game.time.events.add(3500, function(){hero.ghost=false;});
+},
+hitPlayer: function(player,damage){
+ if(!player.ghost){
+ player.hit(damage);
+ } 
 }
-	  
 
 
 };

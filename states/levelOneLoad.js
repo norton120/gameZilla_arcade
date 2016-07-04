@@ -109,13 +109,14 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.addChild(this.shadow);
     this.shadow.scale.setTo(.5,.5);
     this.shadow.visible = false;
-    this.avatar = game.add. sprite(0,0, spriteSheet);
+    this.avatar = game.add.sprite(0,0, spriteSheet);
     this.addChild(this.avatar);
     game.physics.enable(this.avatar, Phaser.Physics.ARCADE);
-    game.camera.follow(this);
-
+    // make the bounding box much smaller for the 2.5D
+    this.avatar.body.setSize(this.avatar.width,20,0,this.avatar.height-20);
     // Base props
     this.points = 0;
+    this.isHit = false;
     this.health = 5;
     this.lives = 3; 
     this.ghost = true;
@@ -209,6 +210,20 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
       }	
     }
 
+    this.hit = function(damage){
+      if(!this.isHit){
+        this.avatar.animations.stop();		     
+        var damage = damage || 1;
+        this.isHit = true;
+        this.ghost= true;
+        game.time.events.add(500,function(){this.isHit = false;},this);
+        game.time.events.add(3000,function(){this.ghost =false;},this);
+        this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
+        this.body.velocity.x = this.direction == "right"? -150:150; 
+        this.health-=damage;
+        if(this.health <0){this.death();}
+      }	
+    }
 
     // weapons
     this.primaryWeapon = new Weapon(game,this.avatar,'sprocket'); 
@@ -216,6 +231,54 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
   }
   Hero.prototype = Object.create(Phaser.Sprite.prototype);
   Hero.prototype.constructor = Hero;
+
+
+
+/* Baddy prototype */
+
+  // @param {obj} game the game object
+  // @param {int} x the starting x coordinate of the sprite
+  // @param {int} y the starting y coordinate of the sprite
+  // @param {string} spriteSheet the name of a loaded sprite sheet
+  Baddy = function(game, x,y,spriteSheet){
+    var honeOn = honeOn || []; 
+    Phaser.Sprite.call(this,game,x,y);
+    game.physics.enable(this, Phaser.Physics.ARCADE);
+    this.body.checkWorldBounds =true;
+    this.body.outOfBoundsKill = true;
+    this.avatar = game.add.sprite(0,0,spriteSheet);
+    this.addChild(this.avatar);
+    game.physics.enable(this.avatar, Phaser.Physics.ARCADE);
+    this.avatar.body.setSize(this.avatar.width,20,0,this.avatar.height-20);
+
+    this.speed = 100;
+    
+    // a very basic AI. Override this at the
+    // extended baddy level to match the character.
+    // @param {string} direction the default direction of travel
+    // @param {boolean} honing determines if the baddy should move toward players
+    // @param {array} honeOn an array of player objects to move toward
+    this.AI = function(direction, honing,honeOn){
+      if(honing){
+	if(honeOn.length < 1){console.log("baddy AI requires players to hone on.");return false;}
+        var target = honeOn[0];
+        for(a=0;a<honeOn.length;a++){
+	  var dist = (this.avatar.world.x - target.world.x)+(this.avatar.world.y - target.world.y);
+	  var nDist = (this.avatar.world.x - honeOn[a].world.x) +(this.avatar.world.y - honeOn[a].world.y);
+	  if(nDist < dist){
+	    target = honeOn[a];
+	  }
+	}  
+	  this.avatar.body.velocity.x = (target.world.x > this.avatar.world.x? this.speed : this.speed*-1);
+	  this.avatar.body.velocity.y = (target.world.y > this.avatar.world.y?this.speed : this.speed*-1);
+      
+      }
+      else
+      this.avatar.body.velocity.x = direction == 'right'? this.speed : this.speed*-1;	      
+    }	      
+  }
+  Baddy.prototype = Object.create(Phaser.Sprite.prototype);
+  Baddy.prototype.constructor = Baddy;
 
 	/* extended prototypes*/
   	  
@@ -244,6 +307,13 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;
 
+	  // Baddies
+	  	/*Troll*/
+		  Troll = function(game,x,y){
+		    Baddy.call(this,game,x,y,'troll');
+		  }
+		  Troll.prototype = Object.create(Baddy.prototype);
+		  Troll.prototype.constructor = Troll;
 
 /* Camera follow for multiple players */		  
 game.moveCamera = function(players){

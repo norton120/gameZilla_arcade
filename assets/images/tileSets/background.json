@@ -1,0 +1,39 @@
+{ "height":1,
+ "layers":[
+        {
+         "data":[0],
+         "height":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":1,
+         "x":0,
+         "y":0
+        }],
+ "orientation":"orthogonal",
+ "properties":
+    {
+
+    },
+ "tileheight":767,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "image":"..\/bgCity.png",
+         "imageheight":767,
+         "imagewidth":2048,
+         "margin":0,
+         "name":"background_far",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tileheight":767,
+         "tilewidth":2048
+        }],
+ "tilewidth":2048,
+ "version":1,
+ "width":1
+}

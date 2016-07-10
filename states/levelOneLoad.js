@@ -8,7 +8,6 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 /*Weapon base prototype*/
   Weapon = function(game,origin,sprite){
     this.weaponStore = game.add.group();
-    
     this.weaponStore.createMultiple(200,sprite,0,false);
     game.physics.enable(this.weaponStore,Phaser.Physics.ARCADE); 
 
@@ -23,6 +22,8 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 	var projectile = this.weaponStore.getFirstExists(false); 
 	projectile.reset(((direction == 'left')? origin.world.x - 50 : origin.world.x + origin.width), origin.world.y + (origin.height /2.5));
 	projectile.exists = true;
+	// oversize the hitbox so it's less of a 'thread the needle' to hit bad guys
+	projectile.body.setSize(projectile.width,projectile.height+20,0,0);	
 	projectile.lifeSpan = this.projectileLifespan;
 	projectile.body.velocity.x = (direction == 'left')? (this.projectileSpeed * -1):this.projectileSpeed;
 	this.nextFire = game.time.time + this.fireRate;	
@@ -31,21 +32,21 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     return this;
   } 
 
-
+//TODO: replace placeholder with a state of the HUD. one hud to rule them all.
 /*HUD prototype*/
   HUD = function(game, name, player, x, y){
     this.container = game.add.sprite(x,y);	   
     this.health = game.add.sprite(10,30,'health_bar',player.health);
     this.container.addChild(this.health);
-    this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#fefefe'});
-    this.lives = game.add.text(this.name.width+10,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#fefefe"});
+    this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#db4605'});
+    this.lives = game.add.text(this.name.width+10,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#db4605"});
     
     this.scoreText = function(score){
       var result = "00000000"+score;
       return result.substr(result.length-8);
     }
 
-    this.score = game.add.text(12,60, this.scoreText(player.points), {font:'1rem Press Start 2P', fill:"#fefefe"});
+    this.score = game.add.text(12,60, this.scoreText(player.points), {font:'1rem Press Start 2P', fill:"#db4605"});
     this.container.addChild(this.score);
     this.container.addChild(this.lives);
     this.container.addChild(this.name);
@@ -64,9 +65,9 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 /*HUD placeholder prototype*/
   HUDPlaceholder = function(game, name, x,y){
     this.container = game.add.sprite(x,y);
-    this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#fefefe'));
+    this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#db4605'));
     var message = game.hardwareInterface.coinMode.freePlay? " PRESS START":(game.coinCredit > 0? " PRESS START":" INSERT COIN");
-    this.message = game.add.text(0,20,message, game.setFont('1rem','#fefefe'));
+    this.message = game.add.text(0,20,message, game.setFont('1rem','#db4605'));
     this.container.addChild(this.name);
     this.container.addChild(this.message);
     this.container.fixedToCamera = true;
@@ -100,8 +101,9 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
   // @param {int} x the starting x coordinate of the sprite
   // @param {int} y the starting y coordinate of the sprite
   // @param {string} spriteSheet the name of a loaded sprite sheet
+  // @param {int} gamePad the global player associated with this hero
   // @param {float} speed, relitive to Anthony. 1 is full speed, 0 stopped.  
-  Hero = function(game, x, y, spriteSheet, speed){
+  Hero = function(game, x, y, spriteSheet, gamePad, speed){
     Phaser.Sprite.call(this, game, x, y);
     game.physics.enable(this, Phaser.Physics.ARCADE);
     this.body.collideWorldBounds = true;
@@ -115,10 +117,12 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     // make the bounding box much smaller for the 2.5D
     this.avatar.body.setSize(this.avatar.width,20,0,this.avatar.height-20);
     // Base props
+    this.gamePad = gamePad;
     this.points = 0;
     this.isHit = false;
     this.health = 5;
     this.lives = 3; 
+    this.isDying = false;
     this.ghost = true;
     this.isFiring = false;
     this.actionSpeed = 170*speed;
@@ -211,18 +215,31 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
 
     this.hit = function(damage){
-      if(!this.isHit){
-        this.avatar.animations.stop();		     
+      if(!this.isHit && !this.ghost && !this.isDying){
+	this.avatar.animations.stop();      
         var damage = damage || 1;
         this.isHit = true;
         this.ghost= true;
-        game.time.events.add(500,function(){this.isHit = false;},this);
+        game.time.events.add(600,function(){this.isHit = false;},this);
         game.time.events.add(3000,function(){this.ghost =false;},this);
         this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
         this.body.velocity.x = this.direction == "right"? -150:150; 
-        this.health-=damage;
-        if(this.health <0){this.death();}
+        this.health = (this.health-damage > -1)? this.health-damage: 0;
       }	
+    }
+    
+    this.death = function(){
+      this.dying =true;
+      this.lives = (this.lives-1 >0)? this.lives-1 : 0;	 
+      this.exists = false;
+      this.reset(this.x+100, 450);
+    }
+
+    this.addHealth = function(points){
+      this.health = (this.health+points < 6)? this.health+points : 5;
+    }
+    this.addPoints = function(points){
+      this.points += points;
     }
 
     // weapons
@@ -252,30 +269,40 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.avatar.body.setSize(this.avatar.width,20,0,this.avatar.height-20);
 
     this.speed = 100;
-    
+    this.health = 4;   
+    this.active = false;
+
     // a very basic AI. Override this at the
     // extended baddy level to match the character.
     // @param {string} direction the default direction of travel
     // @param {boolean} honing determines if the baddy should move toward players
     // @param {array} honeOn an array of player objects to move toward
     this.AI = function(direction, honing,honeOn){
-      if(honing){
-	if(honeOn.length < 1){console.log("baddy AI requires players to hone on.");return false;}
-        var target = honeOn[0];
-        for(a=0;a<honeOn.length;a++){
-	  var dist = (this.avatar.world.x - target.world.x)+(this.avatar.world.y - target.world.y);
-	  var nDist = (this.avatar.world.x - honeOn[a].world.x) +(this.avatar.world.y - honeOn[a].world.y);
-	  if(nDist < dist){
-	    target = honeOn[a];
-	  }
-	}  
-	  this.avatar.body.velocity.x = (target.world.x > this.avatar.world.x? this.speed : this.speed*-1);
-	  this.avatar.body.velocity.y = (target.world.y > this.avatar.world.y?this.speed : this.speed*-1);
+      if(this.active){	    
+        if(honing){
+	  if(honeOn.length < 1){console.log("baddy AI requires players to hone on.");return false;}
+          var target = honeOn[0];
+          for(a=0;a<honeOn.length;a++){
+	    var dist = (this.avatar.world.x - target.world.x)+(this.avatar.world.y - target.world.y);
+	    var nDist = (this.avatar.world.x - honeOn[a].world.x) +(this.avatar.world.y - honeOn[a].world.y);
+	    if(nDist < dist){
+	      target = honeOn[a];
+	    }
+	  }  
+	    this.avatar.body.velocity.x = (target.world.x > this.avatar.world.x? this.speed : this.speed*-1);
+	    this.avatar.body.velocity.y = (target.world.y > this.avatar.world.y?this.speed : this.speed*-1);
       
-      }
-      else
-      this.avatar.body.velocity.x = direction == 'right'? this.speed : this.speed*-1;	      
-    }	      
+        }
+        else{
+          this.avatar.body.velocity.x = direction == 'right'? this.speed : this.speed*-1;	      
+	}	
+      }	
+    }
+    
+    this.hit = function(damage){
+      this.health -=damage;
+      if(this.health < 0){this.avatar.exists = false; this.health = 4;}      
+    }    
   }
   Baddy.prototype = Object.create(Phaser.Sprite.prototype);
   Baddy.prototype.constructor = Baddy;
@@ -288,21 +315,21 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 	  // Heros
 		/*Booch*/  
 		  Anthony = function(game, x, y){
-		    Hero.call(this, game, x, y, 'booch',1);
+		    Hero.call(this, game, x, y, 'booch',3,1);
 		  }
 		  Anthony.prototype = Object.create(Hero.prototype);
 		 Anthony.prototype.constructor = Anthony;
 
 		/*Matt*/
 		  Matt = function(game, x, y){
-		    Hero.call(this,game,x,y, 'booch', 1.2);
+		    Hero.call(this,game,x,y, 'booch',1, 1.2);
 		  }
 		  Matt.prototype = Object.create(Hero.prototype);
 		  Matt.prototype.constructor = Matt;
 
 		/*Nick*/
 		  Nick = function(game, x, y){
-		    Hero.call(this,game,x, y, 'booch', .8);
+		    Hero.call(this,game,x, y, 'booch',2, .8);
 		  }	  
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;
@@ -314,29 +341,6 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 		  }
 		  Troll.prototype = Object.create(Baddy.prototype);
 		  Troll.prototype.constructor = Troll;
-
-/* Camera follow for multiple players */		  
-game.moveCamera = function(players){
-  var following = players[0];
-  for(x=0; x<players.length; x++){ 
-    if(players[x].x > following.x){ following = players[x]; }
-  }
-
- game.camera.follow(following);
-}
-/* Freeze players when they get to far apart for camera */
-game.freezePlayers = function(players){
-  var leftPlayer = players[0];
-  var rightPlayer = players[0];
-  for(x=0;x<players.length; x++){
-    if(players[x].world.x > rightPlayer.world.x){rightPlayer = players[x];}
-    if(players[x].world.x < leftPlayer.world.x){leftPlayer = players[x];}
-  }
-  if(rightPlayer.world.x - leftPlayer.world.x >800){
-    rightPlayer.rightFreeze = true;
-    leftPlayer.leftFreeze = true;
-  }
-}
 
 },
 

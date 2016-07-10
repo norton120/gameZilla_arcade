@@ -64,13 +64,12 @@ var loadState = {
 	    game.load.image('z_button','assets/images/z_button.png',75,75);
 	    game.load.image('shadow','assets/images/shadow.png');
 	    game.load.image('cursor_button','assets/images/cursor_button.png',58,58);
+	    game.load.image('keyboardCat', 'assets/images/keyboardCat.png');
 	    game.load.spritesheet('health_bar', 'assets/images/health_bar.png',123.8,25);
 	    game.load.spritesheet('troll', 'assets/images/troll_sprite.png',95.5,119);
 	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
-	    game.load.spritesheet('hudPlayer1', 'assets/images/hud_player_1.png',340,100);
-	    game.load.spritesheet('hudPlayer2', 'assets/images/hud_player_2.png',340,100);
-	    game.load.spritesheet('hudPlayer3', 'assets/images/hud_player_3.png',340,100);
-
+	
+	    game.load.image('bgCity', 'assets/images/bgCity.png');
 	    game.load.atlasJSONHash('booch','assets/images/textureAtlas/booch_pixelated_50_percent_reduction.png','assets/images/textureAtlas/booch.json');
 
 	},
@@ -172,8 +171,10 @@ var loadState = {
 	  }
 	};	
 
+/*Game Utilites */
+	
 
-	// global font setter. 
+	// global font setter 
 	game.setFont = function(size,color){
 	  return({font: size+' Press Start 2P',fill: color});
 	}

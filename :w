@@ -5,8 +5,7 @@ create: function(){
 
     game.world.setBounds(0,0,4000,768);
     game.stage.backgroundColor = "#7EC0EE";
-    this.bg = game.add.tileSprite(0,-250,2048,767,'bgCity');
-    this.bg.fixedToCamera=true;
+      
 /*Coin Listener*/
     if(!game.hardwareInterface.coinMode.freePlay){
       game.time.events.loop(500,game.checkForCoins,this);
@@ -42,80 +41,95 @@ create: function(){
   
   this.baddies = [];  
 
-    // 20 trolls in store
+    // 2 trolls initially
     this.trolls = [];
-    for(x=0;x<20;x++){
-      troll = new Troll(game, 0,0);
-      troll.avatar.exists = false;
+    for(x=0;x<2;x++){
+      troll = new Troll(game, 750, 400+(x*170));
       this.actors.add(troll);
       this.trolls.push(troll);
-      this.baddies.push(troll);
     }
-
-  // layout the baddies
-  this.addBaddy("trolls", 820, 448);
-  this.addBaddy("trolls", 1500, 490);
-  this.addBaddy("trolls", 1200, 399);
-  this.addBaddy("trolls",1050, 600);
+  this.baddies.push(this.trolls);
 },
 
 update: function(){
 
 /*Setup*/	
 
-    // quick reference variables
+    // create the active players array
     this.activePlayers = this.getActivePlayers();
-    this.heros = this.getNestedSprites("hero",this.activePlayers);
-    this.playerAvatars = this.getNestedSprites(["hero","avatar"],this.activePlayers);
-    this.leftPlayer = this.getPlayerFarthest(this.heros, "left");
-    this.rightPlayer = this.getPlayerFarthest(this.heros, "right");
-     
-this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);      
+    
     // normalize the gamepad inputs	  
     game.updateInputKeyStates();	  
     
     // depth sort the players
     this.actors.sort('y',Phaser.Group.SORT_ASCENDING);
 
+    console.log(this.getPlayerFurthest(this.getNestedSprites("hero",this.activePlayers)),"right");
 /*camera*/
-    // always follow the right player
-    game.camera.follow(this.rightPlayer);  
-    
-    // freeze players that venture too far in multi-player mode
-    if(this.heros.length > 1){
-      this.heros.map(function(p){p.rightFreeze = false; p.leftFreeze = false;});
-      game.camera.deadzone = new Phaser.Rectangle(20,20,800,700);
-      if(this.rightPlayer.world.x - this.leftPlayer.world.x > 800){
-        this.rightPlayer.rightFreeze = true;
-	this.leftPlayer.leftFreeze = true;
+    // adjust camera for multiplayers
+    (function(){
+      var players = [];
+      for (x=1;x<4; x++){
+ 	if(game.players['player'+x].active){players.push(game.players['player'+x]);}      
+      }	      
+
+      var heros = [];	    
+      // follow player to the right
+      for(x=0;x<players.length;x++){
+        heros.push(players[x].hero);
+      }  
+      game.moveCamera(heros);
+     
+      if(players.length > 1){
+	players.map(function(p){p.hero.rightFreeze = false;p.hero.leftFreeze = false;}); 
+	// more room before scrolling for play      
+        game.camera.deadzone = new Phaser.Rectangle(20,20,800,700);
+        // set movement freeze to keep all players inbounds
+	game.freezePlayers(heros); 
       }
-    }
+
+    })();
+
 
 /*collisions*/
     // collide all characters that are depth sorted
-    game.physics.arcade.collide(this.actors);
-
+  /*  game.physics.arcade.collide(this.actors);
+ /*   
+    // create an array of hero avatars for collisions
+    this.activePlayerHeroAvatars = [];
+    for(x=0;x<this.players.length; x++){
+      this.activePlayerHeroAvatars.push(this.activePlayers[x].hero.avatar);
+    }
+    
+    // create an array of baddies for collisions
+    this.activeBaddyAvatars = [];
+    for(b=0;b<this.baddies.length;b++){
+      for(a=0;a<this.baddies[b].length;a++){
+        this.activeBaddyAvatars.push(this.baddies[b][a].avatar);	      
+      }
+    }
     // baddy-player basic hit collisions
-    for(x=0; x<this.baddies.length; x++){
-	baddy = this.baddies[x].avatar;
-        if(baddy.exists){	
-          game.physics.arcade.overlap(this.playerAvatars,baddy,function(p,b){this.hitPlayer(p.parent,1);},null,this);	      
-	}  
+  /*  for(x=0; x<this.activeBaddyAvatars.length; x++){
+      game.physics.arcade.overlap(this.activePlayerHeroAvatars,this.activeBaddyAvatars[x],function(h,e){this.hitPlayer(h.parent,1);},null, this);
     }
+*/
+ /*   this.overlapWithPlayers(this.activeBaddyAvatars, function(x){this.hitPlayer(x.parent,1);});
 
-    // baddy-weapon collisions
-    for(x=0; x<this.baddies.length; x++){
-      var baddy = this.baddies[x].avatar;	    
-      this.heros.map(function(h){
-        game.physics.arcade.overlap(h.primaryWeapon.weaponStore,baddy,function(b,w){h.addPoints(50);w.exists = false;b.parent.hit(1);},null,this);
-      });	
-    }
+
+    //TODO: Convert this to an overlap of the projectiles and the baddies. 
+    // might need to make the hit box on the projectile much taller to compensate. 
+    // baddy weapons collisions
+    for(x=0; x<this.activePlayerHeroAvatars.length; x++){
+      game.physics.arcade.overlap(this.activePlayerHeroAvatars[x].primaryWeapon, this.activeBaddyAvatars, function(h,e){h.exists = false; e.hit(1);},null,this);
+    }	    
+
+
     
 
 /*Player Controls and apperance*/
     for(x=1; x<4; x++){
       var player = game.players['player'+x];    
-      if(player.active && !player.hero.isHit && !player.isDying){
+      if(player.active && !player.hero.isHit){
 	player.hero.alpha = player.hero.ghost? .4 : 1;	
  
         // start each pass 0 velocity
@@ -165,83 +179,41 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
       // update the top bar HUD's
       player.hud.update();      
     }
-/* Trigger baddies and update AI */
-  for(b=0;b<this.baddies.length;b++){
-    if(this.baddies[b].avatar.exists && this.baddies[b].world.x - this.leftPlayer.world.x < 750){
-      this.baddies[b].active = true;	    
-    }	
-    
-    if(this.baddies[b].active){this.baddies[b].AI('left',true,this.heros);}    
-  }
 
-},
-	
-// Apply damage to a player, if dead call death, if game over call continue / game over
-// @param {object} player the player object to be hit
-// @param {integer} damage the damage to apply 	
-hitPlayer: function(player,damage){
-     
-   // hit in the same life
-   if(player.health > 0){
-     player.hit(1);
-   }
-   // new life 
-   else if(player.lives > 1){
-     player.death();
-     player.addHealth(5);
-   }
-   // continue in coin mode
-   else if (!game.hardwareInterface.coinMode.freePlay){	   
-     this.continue(player);
-   }
-   // players can re-join other players in free mode multi-player games, but loose all points.
-   else if (this.activePlayers.length >1){
-     var gameP = game.players['player'+player.gamePad];   
-     gameP.hero.kill();
-     gameP.active = false;
-     player.points = 0;
-   }
-   // free mode solo games cannot be continued
-   else{
-     this.gameOver(); 
-   }
-},
+/*Baddie AI*/
+     this.trolls.map(function(troll){
+      var players = [];
+      for(x=1;x<3;x++){if(game.players['player'+x].active){players.push(game.players['player'+x].hero);}}	     
+      if(troll.exists){ troll.AI('left',true,players);}
+     });
+  },
 
-// Continue option on coin mode games
-continue: function(player){
-	//TODO: should have a solo and multi-player solution
-},
+insertHero: function(player, x, y){
+  player.hero.health = 5;
+  player.ghost = true;
+  player.exists = true;
+  player.reset(x,y);
+},  
 
-gameOver: function(){
-  game.state.start('gameOver');	
-},
-
-//TODO: why are we passing the character? why can't we reference that from the player? 
-// Introduces a player to the game
-// @param {object} game the game object
-// @param {object} player  the player to be added
-// @param {string} character the game character for that player
-// @param {integer} x the x coordinate to insert the player
-// @param {integer} y the y coordinate to insert the player	
 addPlayerToGame: function(game,player, character, x, y){
   player.active = true;
   var hudX;	
   switch (character){
     case 'Anthony':
-     player.hero = new Anthony(game,x, y, 3);
+     player.hero = new Anthony(game,x, y);
      player.hero.visible = false;
      game.add.existing(player.hero);
      hudX = 2;
      break;
       
     case 'Matt':
-     player.hero = new Matt(game,x,y,1);
+     player.hero = new Matt(game,x,y);
      game.add.existing(player.hero);
      hudX =0;   	
      break;
 
     case 'Nick':
-     player.hero = new Matt(game,x,y,2);
+     player.hero = new Matt(game,x,y);
      game.add.existing(player.hero);
      hudX =1;
      break;
@@ -251,13 +223,15 @@ addPlayerToGame: function(game,player, character, x, y){
  this.ghostIn(player.hero);
  game.time.events.add(400, function(){player.hero.visible = true;},this); 
 },
-
-// That cool effect where a player goes from transparent, to flashing, to solid on game entry.
-// @param {object} the object to 'ghost in' 	
 ghostIn: function(hero){
   var time = 100;	
   game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.ghost= !hero.ghost; time=Math.floor(time*.5);},this)},this);
   game.time.events.add(3500, function(){hero.ghost=false;});
+},
+hitPlayer: function(player,damage){
+ if(!player.ghost){
+ player.hit(damage);
+ } 
 },
 
 // returns an array of active players	
@@ -268,6 +242,17 @@ getActivePlayers: function(){
   return players;   
 },
 
+// overlap with active player hero avatars
+overlapWithPlayers: function(collider,callback){
+  var players = this.activePlayers();
+  var avatars = [];
+  for(x=0;x<players.length;x++){
+    avatars.push(players[x].hero.avatar);
+  }
+  for(x<0;x<avatars.length;x++){
+    game.physics.arcade.overlap(avatars[x],collider,callback,null,this);
+  }
+},
 // returns an array of sprites matching the sprite name
 // @param {string}|| {array} spriteName the object name of the sprite. if an array, flattened
 //      and nested in array order. so top.middle.target would be ["middle","target"]
@@ -288,41 +273,38 @@ getNestedSprites(spriteName, players){
   }
   return result;
 },	
-
+// returns an array of player heros
+// @param {array} players the players to grab heros from	
+getPlayerHeros: function(players){
+  var heros =[];
+  for(x=0;x<players.length;x++){
+    heros.push(players[x].hero);
+  }
+  return heros;
+},	
+// returns an array of player avatars
+// @param {array} players the players to grab avatars from	
+getPlayerAvatars: function(players){
+  var avatars = [];
+  for(x=0;x<players.length;x++){
+    avatars.push(players[x].hero.avatar);
+  }
+  return avatars;  
+},	
 // returns the player furthest to the one side of the game screen
 // @param {array} players the players to compare
 // @param {string} side which side of the screen. Options ["left","right"]	
-getPlayerFarthest: function(players, side){
-  var farthest = players[0];
+getPlayerFurthest: function(players, side){
+  var furthest = players[0];
   for(x=0; x<players.length;x++){
     if(side == "right"){
-      if(players[x].world.x > farthest.world.x){farthest = players[x];}	    
+      if(players[x].world.x > furthest.world.x){furthest = players[x];}	    
     }
     else{
-      if(players[x].world.x < farthest.world.x){farthest = players[x];}	    
+      if(players[x].world.x < furthest.world.x){furthest = players[x];}	    
     }
   }
-  return farthest;  
-},
-
-// Inserts a baddy at the location specified
-// @param {string} baddy the name of the baddy array to pull from
-// @param {integer} x the x coordinate to add the baddy at
-// @param {integer} y the y coordinate to add the baddy at
-addBaddy: function(baddies, x, y){
-  var baddy = (function(){
-    for(b=0;b<this[baddies].length;b++){
-      if(!this[baddies][b].avatar.exists){
-        return this[baddies][b];
-      }
-    }
-  }).bind(this)();  
-  baddy.reset(x,y);
-  baddy.avatar.exists = true;
-},
-
-// For debugging	
-render: function(){
-},
+  return furthest;  
+}
 
 };

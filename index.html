@@ -18,6 +18,10 @@
     <script type="text/javascript" src="states/playerSelect.js"></script>
     <script type="text/javascript" src="states/levelOneLoad.js"></script>
     <script type="text/javascript" src="states/levelOne.js"></script>
+    <script type="text/javascript" src="states/gameOver.js"></script>
+    <script type="text/javascript" src="states/highScore.js"></script>
+
+
 
 
     <script type="text/javascript">
@@ -30,6 +34,10 @@
 	game.state.add('playerSelect',playerSelectState);
 	game.state.add('levelOneLoad',levelOneLoadState);
 	game.state.add('levelOne', levelOneState);
+	game.state.add('highScore', highScoreState);
+	game.state.add('gameOver', gameOverState);
+
+
 
 	game.state.start('load');
 

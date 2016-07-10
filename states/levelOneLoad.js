@@ -178,7 +178,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
 
     this.jump = function(){
-      if(!this.jumping){
+      if(!this.jumping & !this.isHit && !this.isDying){
 	var dir = this.direction.charAt(0).toUpperCase() + this.direction.slice(1);      
 	this.avatar.animations.play('jumpStart'+dir);      
 	this.jumping = true;
@@ -206,7 +206,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
 
     this.fire = function(){
-      if(!this.isFiring){	    
+      if(!this.isFiring && !this.isHit && !this.isDying){	    
         this.isFiring = true;	    
         var anim = this.direction == 'right'? fireRight:fireLeft;
         anim.play();

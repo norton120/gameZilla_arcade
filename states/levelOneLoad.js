@@ -215,12 +215,13 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
 
     this.hit = function(damage){
+	    //TODO: this is STILL buggy. sometimes player gets stuck with isHit=true
       if(!this.isHit && !this.ghost && !this.isDying){
 	this.avatar.animations.stop();      
         var damage = damage || 1;
         this.isHit = true;
         this.ghost= true;
-        game.time.events.add(600,function(){this.isHit = false;},this);
+        game.time.events.add(400,function(){this.isHit = false;},this);
         game.time.events.add(3000,function(){this.ghost =false;},this);
         this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
         this.body.velocity.x = this.direction == "right"? -150:150; 

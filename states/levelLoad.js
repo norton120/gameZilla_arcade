@@ -56,7 +56,7 @@ this.updateExtendBefore();
     this.playerAvatars = this.getNestedSprites(["hero","avatar"],this.activePlayers);
     this.leftPlayer = this.getPlayerFarthest(this.heros, "left");
     this.rightPlayer = this.getPlayerFarthest(this.heros, "right");
-     
+
 this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);      
     // normalize the gamepad inputs	  
     game.updateInputKeyStates();	  
@@ -152,11 +152,12 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
       // update the top bar HUD's
       player.hud.update();      
     }
+
 /* Trigger baddies and update AI */
   for(b=0;b<this.baddies.length;b++){
-    if(this.baddies[b].avatar.exists && this.baddies[b].world.x - this.leftPlayer.world.x < 750){
-      this.baddies[b].active = true;	    
-    }	
+    if(this.baddies[b].avatar.exists && ((this.baddies[b].world.x - this.rightPlayer.world.x) < 750)){
+      this.baddies[b].active = true;	
+    }
     
     if(this.baddies[b].active){this.baddies[b].AI('left',true,this.heros);}    
   }
@@ -185,6 +186,9 @@ hitPlayer: function(player,damage){
    else if (this.activePlayers.length >1){
      var gameP = game.players['player'+player.gamePad];   
      gameP.hero.kill();
+     var oldHudX = gameP.hud.x;
+     gameP.hud.container.destroy();
+     gameP.hud = new HUDPlaceholder(game, gameP.displayName,oldHudX,10);
      gameP.active = false;
      player.points = 0;
    }
@@ -227,7 +231,7 @@ addPlayerToGame: function(game,player, character, x, y){
      break;
 
     case 'Nick':
-     player.hero = new Matt(game,x,y);
+     player.hero = new Nick(game,x,y);
      game.add.existing(player.hero);
      hudX =1;
      break;

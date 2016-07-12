@@ -21,4 +21,5 @@ Since our game is a 2.5D side-scroller, the baseline setup for each level is a b
 ### Gotchas ###
 * **DON'T USE GROUPS!** - forget all about Phaser.group for this application. Adding an object to one group removes it from another group, a major weak spot in Phaser. We are using a group *actors* to sort all the players on the y-axis (so lower sits on top, giving the illusion of depth) - standard 2.5D fare. If you use groups, you will most likely pull the object out of the depth sort and brake it; try using arrays instead, they work almost everywhere that groups will work and there is no limit to how many arrays an object can be in. 
 
-* Beware of scope - to contain things on a level-by-level basis, scope everything you can with *this*. Exceptions would be stuff that needs to be game-wide, which wou 
+* **Beware of scope** - to contain things on a level-by-level basis, scope everything you can with *this*. Exceptions are things that need to be game-wide, which should belong to the *game* object. 
+

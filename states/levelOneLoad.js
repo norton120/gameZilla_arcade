@@ -119,10 +119,10 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     // Base props
     this.gamePad = gamePad;
     this.points = 0;
-    this.isHit = false;
     this.health = 5;
     this.lives = 3; 
     this.isDying = false;
+    this.isGhostIn = true;
     this.ghost = true;
     this.isFiring = false;
     this.actionSpeed = 170*speed;
@@ -130,12 +130,13 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.jumping = false;
     this.leftFreeze = false;
     this.rightFreeze = false;
+    this.isHitTimer = 0;
+    this.isFiringTimer = 0;
 
     // Calculated Props
     this.feet = function(){return(this.avatar.world.y + this.avatar.height);}
 
-    // animations11
-    //this.avatar.animations.add('runRight',[13,14,15],8, true);
+    // animations
     this.avatar.animations.add('runRight', Phaser.Animation.generateFrameNames('run_right_', 1,8), 12, true);
     this.avatar.animations.add('runLeft', Phaser.Animation.generateFrameNames('run_left_', 1,8), 12, true);
     this.avatar.animations.add('jumpStartRight', Phaser.Animation.generateFrameNames('jump_right_', 1,2), 16, false);
@@ -178,7 +179,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
 
     this.jump = function(){
-      if(!this.jumping & !this.isHit && !this.isDying){
+      if(!this.jumping){
 	var dir = this.direction.charAt(0).toUpperCase() + this.direction.slice(1);      
 	this.avatar.animations.play('jumpStart'+dir);      
 	this.jumping = true;
@@ -206,31 +207,29 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
 
     this.fire = function(){
-      if(!this.isFiring && !this.isHit && !this.isDying){	    
-        this.isFiring = true;	    
+      if(!this.isFiring){	    
+	this.isFiring = true;	    
         var anim = this.direction == 'right'? fireRight:fireLeft;
         anim.play();
-        anim.onComplete.add(function(){this.primaryWeapon.fire(this.direction); this.isFiring = false;},this);	    
-      }	
+        anim.onComplete.add(function(){this.primaryWeapon.fire(this.direction); this.isFiring = false;},this);
+      }
     }
 
     this.hit = function(damage){
-	    //TODO: this is STILL buggy. sometimes player gets stuck with isHit=true
-      if(!this.isHit && !this.ghost && !this.isDying){
-	this.avatar.animations.stop();      
-        var damage = damage || 1;
-        this.isHit = true;
-        this.ghost= true;
-        game.time.events.add(400,function(){this.isHit = false;},this);
-        game.time.events.add(3000,function(){this.ghost =false;},this);
-        this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
-        this.body.velocity.x = this.direction == "right"? -150:150; 
-        this.health = (this.health-damage > -1)? this.health-damage: 0;
-      }	
+      this.avatar.animations.stop();	    
+      this.isHitTimer = game.time.time +600;	
+      this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
+      var damage = damage || 1;
+      this.body.velocity.x = this.direction == "right"? -150:150; 
+      this.health = (this.health-damage > -1)? this.health-damage: 0;
+      // if a collision stops the fire or jump animations, players get 'stuck'
+      // this will unstick them.
+      this.isFiring = false;
+      this.jumping = false;
     }
-    
+
     this.death = function(){
-      this.dying =true;
+      //this.dying =true;
       this.lives = (this.lives-1 >0)? this.lives-1 : 0;	 
       this.exists = false;
       this.reset(this.x+100, 450);
@@ -270,8 +269,9 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.avatar.body.setSize(this.avatar.width,20,0,this.avatar.height-20);
 
     this.speed = 100;
-    this.health = 4;   
     this.active = false;
+    this.isHitTimer = 0;
+    this.health = 1;
 
     // a very basic AI. Override this at the
     // extended baddy level to match the character.
@@ -301,8 +301,11 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     }
     
     this.hit = function(damage){
-      this.health -=damage;
-      if(this.health < 0){this.avatar.exists = false; this.health = 4;}      
+      if(this.isHitTimer < game.time.time){
+	this.health -=damage;      
+        if(this.health < 1){this.avatar.exists = false;}
+	this.isHitTimer = game.time.time + 100;
+      }	
     }    
   }
   Baddy.prototype = Object.create(Phaser.Sprite.prototype);

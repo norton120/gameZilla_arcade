@@ -80,15 +80,27 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
 
 /*collisions*/
     // collide all characters that are depth sorted
-    game.physics.arcade.collide(this.actors);
+    game.physics.arcade.collide(this.heros);
+    game.physics.arcade.collide(this.baddies);
+    
+    // set ghost status before collisions
+    this.activePlayers.map(function(p){
+      p.hero.ghost = p.hero.isHitTimer+1500 > game.time.time || p.hero.isGhostIn;
+      
+    });
+
 
     // baddy-player basic hit collisions
-    for(x=0; x<this.baddies.length; x++){
-	baddy = this.baddies[x].avatar;
-        if(baddy.exists){	
-          game.physics.arcade.overlap(this.playerAvatars,baddy,function(p,b){this.hitPlayer(p.parent,1);},null,this);	      
+    for(b=0; b<this.baddies.length; b++){
+	baddy = this.baddies[b].avatar;
+	if(baddy.exists){
+	  for(p=0;p<this.playerAvatars.length;p++){
+	    if(baddy.overlap(this.playerAvatars[p])&& !this.playerAvatars[p].parent.ghost){
+	      this.hitPlayer(this.playerAvatars[p].parent,1);
+	    }
+	  }
 	}  
-    }
+     }	
 
     // baddy-weapon collisions
     for(x=0; x<this.baddies.length; x++){
@@ -102,19 +114,22 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
 /*Player Controls and apperance*/
     for(x=1; x<4; x++){
       var player = game.players['player'+x];    
-      if(player.active && !player.hero.isHit && !player.isDying){
+      if(player.active && player.hero.isHitTimer < game.time.time){
+	// Set players alpha lower when a ghost      
 	player.hero.alpha = player.hero.ghost? .4 : 1;	
  
         // start each pass 0 velocity
         // so hero stops if no keys pressed  	  
         player.hero.body.velocity.x = 0;
+	
+
         if(!player.hero.jumping){player.hero.body.velocity.y = 0;}
 
         // fire key
         if(player.controls.firePressed && !player.hero.jumping){player.hero.fire();} 
     
         // jump key
-        if(player.controls.jumpPressed && !player.hero.isFiring){player.hero.jump();}	
+        if(player.controls.jumpPressed && !player.hero.isFiringi){player.hero.jump();}	
 
         // Z-axis cursors
         if(player.controls.downPressed  && (player.controls.rightPressed || player.controls.leftPressed) && !player.hero.jumping && (player.hero.feet() < (this.street.bottom -30))){player.hero.moveDown();}
@@ -144,7 +159,7 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
           player.hero.standStill();	    
         }
       }
-      else if(player.controls.startPressed && (game.hardwareInterface.coinMode.freePlay || game.coinCredit>0)){
+      else if(!player.active && player.controls.startPressed && (game.hardwareInterface.coinMode.freePlay || game.coinCredit>0)){
 	player.hud.container.destroy();
         this.addPlayerToGame(game,player,player.displayName, this.leftPlayer.world.x, 348); 
 	game.coinCredit--;
@@ -168,39 +183,39 @@ this.updateExtendAfter();
 // @param {object} player the player object to be hit
 // @param {integer} damage the damage to apply 	
 hitPlayer: function(player,damage){
-     
-   // hit in the same life
-   if(player.health > 0){
-     player.hit(1);
-   }
-   // new life 
-   else if(player.lives > 1){
-     player.death();
-     player.addHealth(5);
-   }
-   // continue in coin mode
-   else if (!game.hardwareInterface.coinMode.freePlay){	   
-     this.continue(player);
-   }
-   // players can re-join other players in free mode multi-player games, but loose all points.
-   else if (this.activePlayers.length >1){
-     var gameP = game.players['player'+player.gamePad];   
-     gameP.hero.kill();
-     var oldHudX = gameP.hud.x;
-     gameP.hud.container.destroy();
-     gameP.hud = new HUDPlaceholder(game, gameP.displayName,oldHudX,10);
-     gameP.active = false;
-     player.points = 0;
-   }
-   // free mode solo games cannot be continued
-   else{
-     this.gameOver(); 
-   }
+     // hit in the same life
+     if(player.health > 1){
+       player.hit(damage);
+
+     }
+     // new life 
+     else if(player.lives > 1){
+       player.death();
+       player.addHealth(5);
+     }
+     // continue in coin mode
+     else if (!game.hardwareInterface.coinMode.freePlay){	   
+       this.continue(player);
+     }
+     // players can re-join other players in free mode multi-player games, but loose all points.
+     else if (this.activePlayers.length >1){
+       var gameP = game.players['player'+player.gamePad];   
+       gameP.hero.kill();
+       var oldHudX = gameP.hud.x;
+       gameP.hud.container.destroy();
+       gameP.hud = new HUDPlaceholder(game, gameP.displayName,oldHudX,10);
+       gameP.active = false;
+       player.points = 0;
+     }
+     // free mode solo games cannot be continued
+     else{
+       this.gameOver(); 
+     }
 },
 
-// Continue option on coin mode games
+  // Continue option on coin mode games
 continue: function(player){
-	//TODO: should have a solo and multi-player solution
+  	//TODO: should have a solo and multi-player solution
 },
 
 gameOver: function(){
@@ -246,8 +261,8 @@ addPlayerToGame: function(game,player, character, x, y){
 // @param {object} the object to 'ghost in' 	
 ghostIn: function(hero){
   var time = 100;	
-  game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.ghost= !hero.ghost; time=Math.floor(time*.5);},this)},this);
-  game.time.events.add(3500, function(){hero.ghost=false;});
+  game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.isGhostIn= !hero.isGhostIn; time=Math.floor(time*.5);},this)},this);
+  game.time.events.add(3500, function(){hero.isGhostIn=false;});
 },
 
 // returns an array of active players	
@@ -299,7 +314,8 @@ getPlayerFarthest: function(players, side){
 // @param {string} baddy the name of the baddy array to pull from
 // @param {integer} x the x coordinate to add the baddy at
 // @param {integer} y the y coordinate to add the baddy at
-addBaddy: function(baddies, x, y){
+// @param {integer} health the health points the baddy should start with
+addBaddy: function(baddies, x, y, health){
   var baddy = (function(){
     for(b=0;b<this[baddies].length;b++){
       if(!this[baddies][b].avatar.exists){
@@ -308,6 +324,7 @@ addBaddy: function(baddies, x, y){
     }
   }).bind(this)();  
   baddy.reset(x,y);
+  baddy.health = health;
   baddy.avatar.exists = true;
 },
 

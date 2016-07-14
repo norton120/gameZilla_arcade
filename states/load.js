@@ -45,6 +45,8 @@ var loadState = {
 	    game.load.audio('black_betty','assets/sounds/black_betty.mp3');	
 	    game.load.audio('rainbow_in_the_dark', 'assets/sounds/rainbow_in_the_dark.mp3');
 	    game.load.audio('jump','assets/sounds/jump.mp3');
+	    game.load.audio('booch_theme','assets/sounds/booch_theme.wav');
+	    game.load.audio('menu','assets/sounds/MKup.mp3');
 	    game.load.audio('hey', 'assets/sounds/hey.mp3');
 	    game.load.audio('typeWriter','assets/sounds/type.mp3');
 	    
@@ -77,7 +79,7 @@ var loadState = {
  create: function(){
    // load the Phaser world physics, create the world space, set world constants	
    game.physics.startSystem(Phaser.Physics.ARCADE);
-   game.time.desiredFps = 30;
+   game.time.desiredFps = 60;
 
    // these can all go. create on level, stage and character levels 
             // Create the global sound effects

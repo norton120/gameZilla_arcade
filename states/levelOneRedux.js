@@ -1,6 +1,9 @@
 var levelOneState = sideScrollLevelState;
 
 levelOneState.createExtendBefore = function(){
+  game.bgMusic.stop();	
+  game.bgMusic = this.add.audio('booch_theme');
+  game.bgMusic.play(null,10);
   game.world.setBounds(0,0,4000,768);
   this.bg = game.add.tileSprite(0,-250,2048,767,'bgCity');
   this.bg.fixedToCamera=true;
@@ -18,10 +21,10 @@ levelOneState.createExtendAfter = function(){
   }
 
 /* time to add the bad guys!*/  
-  this.addBaddy("trolls",820,448);
-  this.addBaddy("trolls",1500,490);
-  this.addBaddy("trolls",1200,399);
-  this.addBaddy("trolls",1050,600);
+  this.addBaddy("trolls",820,448,4);
+  this.addBaddy("trolls",1500,490,4)
+  this.addBaddy("trolls",1200,399,4);
+  this.addBaddy("trolls",1050,600,4);
 }
 
 levelOneState.updateExtendBefore = function(){

@@ -6,7 +6,7 @@ create: function(){
 	this.waitingCount=10;
         this.startPause=0;
 
-	game.bgMusic = this.add.audio('rainbow_in_the_dark');
+	game.bgMusic = this.add.audio('menu');
         game.bgMusic.play(null,10);	
 
         var menuBackground = game.add.tileSprite(0,0, game.world.width, game.world.height, 'diamondPlate');

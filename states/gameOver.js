@@ -12,7 +12,7 @@ create: function(){
     game.players['player'+x].active = false; 
   }
 
-  game.time.events.add(2000, function(){game.state.start('startMenu')},this);
+  game.time.events.add(2000, function(){game.state.start('load')},this);
 }
 
 };

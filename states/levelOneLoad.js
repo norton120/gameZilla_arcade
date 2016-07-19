@@ -46,7 +46,9 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.flashTimer = 0;
 
     this.makeActive =function(){	
-      state = "active";	    
+      state = "active";	   
+      this.flashing = false; 
+
       this.container.removeChildren();
       this.health = game.add.sprite(10,30,'health_bar',player.hero.health);
       this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#db4605'});
@@ -61,20 +63,19 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.makeInactive = function(){
       state = "inactive";	    
       this.container.removeChildren();
-      this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#db4605'));
+      this.name = game.add.text(12,10, name.toUpperCase(), game.setFont('1rem','#db4605'));
       var message = game.hardwareInterface.coinMode.freePlay? " PRESS START":(game.coinCredit > 0? " PRESS START":" INSERT COIN");
-      this.message = game.add.text(0,20,message, game.setFont('1rem','#db4605'));
+      this.message = game.add.text(0,30,message, game.setFont('1rem','#db4605'));
       this.container.addChild(this.name);
       this.container.addChild(this.message);
     }
     
     this.makeContinue = function(){
       state = "continue";
+      this.flashing = true;
       this.container.removeChildren();
-      this.flashing = true;	
-      this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#db4605'));      
-      var countDown = 10;
-      var message = game.coinCredit > 0? " PRESS START":" CONTINUE :"+countDown;	      
+      this.name = game.add.text(12,10, name.toUpperCase(), game.setFont('1rem','#db4605'));      
+      var message = game.coinCredit > 0? "PRESS START":"INSERT COIN :"+player.continueTimer;	
       this.message = game.add.text(0,20, message, game.setFont('1rem',"#db4605"));
       this.container.addChild(this.name);
       this.container.addChild(this.message);
@@ -103,11 +104,12 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     this.update = function(){
       if(this.flashing){
         if(game.time.time > this.flashTimer){
-          this.alpha = this.alpha == 0? 1:0;
+          this.container.alpha = this.container.alpha == 0? 1:0;
+	  this.flashTimer = game.time.time +500;
 	}  
       }
       else{
-        this.alpha =1;
+        this.container.alpha =1;
       }	
 
       switch(state){
@@ -118,7 +120,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 	break;
         
         case "continue":
-	  if(game.coinCredit < 1){this.message.setText(" CONTINUE :"+(this.countDown < 10? "0"+this.countDown : this.countDown));}
+	  this.message.setText((game.coinCredit > 0)? "PRESS START" : "INSERT COIN :"+(player.continueTimer< 10? "0"+player.continueTimer : player.continueTimer));
         break;
         
         case "inactive":
@@ -270,8 +272,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
       //this.dying =true;
       this.lives = (this.lives-1 >0)? this.lives-1 : 0;	 
       this.exists = false;
-      //TODO: this should be looking for center maybe? 
-      this.reset(this.x+100, 450);
+      this.reset(game.camera.x+300, 450);
     }
 
     this.addHealth = function(points){
@@ -318,9 +319,11 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     // @param {boolean} honing determines if the baddy should move toward players
     // @param {array} honeOn an array of player objects to move toward
     this.AI = function(direction, honing,honeOn){
+      this.avatar.body.velocity.x = 0;
+      this.avatar.body.velocity.y = 0;      
       if(this.active){	    
-        if(honing){
-	  if(honeOn.length < 1){console.log("baddy AI requires players to hone on.");return false;}
+
+        if(honing && honeOn.length > 0){
           var target = honeOn[0];
           for(a=0;a<honeOn.length;a++){
 	    var dist = (this.avatar.world.x - target.world.x)+(this.avatar.world.y - target.world.y);
@@ -329,16 +332,22 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
 	      target = honeOn[a];
 	    }
 	  }  
-	    this.avatar.body.velocity.x = (target.world.x > this.avatar.world.x? this.speed : this.speed*-1);
-	    this.avatar.body.velocity.y = (target.world.y > this.avatar.world.y?this.speed : this.speed*-1);
-      
+	  this.avatar.body.velocity.x = (target.world.x > this.avatar.world.x? this.speed : this.speed*-1);
+	  this.avatar.body.velocity.y = (target.world.y > this.avatar.world.y?this.speed : this.speed*-1);
         }
         else{
+	  this.avatar.body.velocity.y = 0;	
           this.avatar.body.velocity.x = direction == 'right'? this.speed : this.speed*-1;	      
 	}	
       }	
     }
-    
+ 
+
+    this.stopHoning = function(){
+      this.avatar.body.velocity.x =0;
+      this.avatar.body.velocity.y = 0;
+    }
+
     this.hit = function(damage){
       if(this.isHitTimer < game.time.time){
 	this.health -=damage;      

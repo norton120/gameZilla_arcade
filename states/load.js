@@ -79,7 +79,7 @@ var loadState = {
  create: function(){
    // load the Phaser world physics, create the world space, set world constants	
    game.physics.startSystem(Phaser.Physics.ARCADE);
-   game.time.desiredFps = 60;
+   game.time.desiredFps = 30;
 
    // these can all go. create on level, stage and character levels 
             // Create the global sound effects
@@ -112,6 +112,7 @@ var loadState = {
 	for(x=1; x<4; x++){
 	  var player = game.players['player'+x];	
 	  player.active = false;	
+	  player.continueTimer = 0;
 	  player.hero ={};
 	  player.controls = {};    
 	  player.controls.rightPressed = false;

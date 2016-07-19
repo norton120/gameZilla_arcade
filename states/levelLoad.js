@@ -57,7 +57,6 @@ this.updateExtendBefore();
     this.leftPlayer = this.getPlayerFarthest(this.heros, "left");
     this.rightPlayer = this.getPlayerFarthest(this.heros, "right");
 
-this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);      
     // normalize the gamepad inputs	  
     game.updateInputKeyStates();	  
     
@@ -89,12 +88,6 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
       
     });
 
-    for(b=0;b<this.baddies.length; b++){
-      baddy = this.baddies[b].avatar;
-      if(baddy.exists){
-        game.physics.arcade.overlap(this.playerAvatars, baddy, 
-      }
-    }
     // baddy-player basic hit collisions
     for(b=0; b<this.baddies.length; b++){
 	baddy = this.baddies[b].avatar;
@@ -166,21 +159,39 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
       }
       // Add new player during play
       else if(!player.active && player.controls.startPressed && (game.hardwareInterface.coinMode.freePlay || game.coinCredit>0)){
-        this.addPlayerToGame(game,player,player.displayName, this.leftPlayer.world.x+50, 348); 
+        this.addPlayerToGame(game,player,player.displayName, game.camera.x+300, 348); 
 	game.coinCredit--;
       }
       // update the top bar HUD's
       player.hud.update();      
     }
 
+/* If no active players and no continue countdowns, end game */
+  (function(){
+    var continuing = 0;
+    for(x=1; x<4; x++){
+      if(game.players['player'+x].continueTimer > 0){
+        continuing +=1;
+      } 	  
+    }
+    if(continuing <1 && this.activePlayers.length < 1){
+      this.gameOver();	    
+    }   
+  }).bind(this)();	
+
 /* Trigger baddies and update AI */
   for(b=0;b<this.baddies.length;b++){
-    if(this.baddies[b].avatar.exists && ((this.baddies[b].world.x - this.rightPlayer.world.x) < 750)){
-      this.baddies[b].active = true;	
+    if(this.rightPlayer){	    
+      if(this.baddies[b].avatar.exists && ((this.baddies[b].world.x - this.rightPlayer.world.x) < 750)){
+        this.baddies[b].active = true;	
+      }
+      if(this.baddies[b].active){this.baddies[b].AI('left',true,this.heros);}    
     }
-    
-    if(this.baddies[b].active){this.baddies[b].AI('left',true,this.heros);}    
-  }
+    else{
+      this.baddies[b].stopHoning();	    
+    }
+  }  
+
 this.updateExtendAfter();
 },
 	
@@ -205,7 +216,7 @@ hitPlayer: function(player,damage){
      }
      // continue in coin mode
      else if (!game.hardwareInterface.coinMode.freePlay){	   
-       this.continue(playerParent);
+       if(playerParent.active){this.continue(playerParent);}
      }
      // players can re-join other players in free mode multi-player games, but loose all points.
      else if (this.activePlayers.length >1){
@@ -222,36 +233,31 @@ hitPlayer: function(player,damage){
 
   // Continue option on coin mode games
 continue: function(playerParent){
-  // Multiple Players
-  if(this.activePlayers.length >1){
-    playerParent.hud.makeContinue();
-    playerParent.active = false;
-    playerParent.hero.kill();
-    playerParent.hud.countDown = 10;
-    var points = playerParent.hero.points;
-    game.time.events.repeat(1000,9, function(){
-      
-      if(!playerParent.active){
-        if(playerParent.hud.countDown > 0){
-	  playerParent.hud.countDown--;
-	}
-	else
-	{
-	  playerParent.hud.makeInactive();
-	}
-      }
-      // apply points to the continued player
-      else{
-        playerParent.hero.points += points;	      
-      }
 
-    });
-
-  }
-  // Solo continue
-  else{
-  }
-	
+  var points = playerParent.hero.points;
+  playerParent.hud.makeContinue();
+  playerParent.continueTimer =10;
+  playerParent.active = false;
+  playerParent.hero.kill();
+  
+  // countdown
+  game.time.events.repeat(1000,11, function(){
+    if(!playerParent.active){
+      if(playerParent.continueTimer == 0){
+        playerParent.hud.makeInactive();
+      }
+      else{      
+        playerParent.continueTimer -=1;
+      }	
+    }
+    // apply points to the continued player
+    else{
+      if(playerParent.continueTimer > 0){
+        playerParent.hero.points += points;
+	playerParent.continueTimer = 0; 
+      }  
+    }
+  });
 },
 
 gameOver: function(){
@@ -371,7 +377,6 @@ addBaddy: function(baddies, x, y, health){
 // when level has been completed
 levelComplete: function(){
   this.levelCompleteBefore();
-  this.levelCompleteAfter();
 },	
 
 /*Extend functions for building levels*/	
@@ -384,8 +389,6 @@ updateExtendBefore: function(){
 updateExtendAfter: function(){
 },
 levelCompleteBefore: function(){
-},
-levelCompleteAfter: function(){
 },
 
 render: function(){

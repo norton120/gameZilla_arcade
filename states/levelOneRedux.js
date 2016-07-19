@@ -1,4 +1,4 @@
-var levelOneState = sideScrollLevelState;
+var levelOneState = new sideScroller();
 
 levelOneState.createExtendBefore = function(){
   game.bgMusic.stop();	
@@ -46,6 +46,6 @@ levelOneState.updateExtendAfter = function(){
 }
 
 levelOneState.levelCompleteBefore = function(){
-  game.state.start('levelOneBoss');
+  game.state.start('title',true,false,'levelOneBoss');
 }
 

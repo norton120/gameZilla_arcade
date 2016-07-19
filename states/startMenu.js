@@ -106,6 +106,6 @@ addPlayer: function(){
 },	
 
 start: function(){ 
-  game.state.start('levelOneLoad');
+  game.state.start('title',true,false,'levelOne');
 }
 };

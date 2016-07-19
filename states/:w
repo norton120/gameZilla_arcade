@@ -1,0 +1,27 @@
+var titleState = function(level){}
+
+titleState.prototype = {
+create: function(level){
+ console.log(level);	
+  var title = "";
+  switch(level){
+    case "levelOne":
+      title = "LEVEL ONE: JACKSON STREET";
+      break;
+    case "levelOneBoss":
+      title =  "DEFEAT LEFT SHARK!";
+      break;
+    case "levelTwo":
+      title = "LEVEL TWO: REVZILLA HQ";
+      break;
+    case "levelTwoBoss":
+      title = "STOP KEYBOARD CAT!";
+      break;
+  }
+	      
+  game.bgMusic.stop();
+  game.add.text(200,200,title,game.setFont("2rem", "#fefefe"));
+  game.time.events.add(2000, function(){game.state.start(level);},this);
+}
+};
+

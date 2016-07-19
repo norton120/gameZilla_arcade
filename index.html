@@ -15,18 +15,13 @@
     <script type="text/javascript" src="states/load.js"></script>
     <script type="text/javascript" src="states/startMenu.js"></script>
     <script type="text/javascript" src="states/introStory.js"></script>
-    <script type="text/javascript" src="states/playerSelect.js"></script>
-    <script type="text/javascript" src="states/levelLoad.js"></script>
-    <script type="text/javascript" src="states/levelOneLoad.js"></script>
+    <script type="text/javascript" src="states/title.js"></script>
     <script type="text/javascript" src="states/levelOneRedux.js"></script>
-    <script type="text/javascript" src="states/gameOver.js"></script>
     <script type="text/javascript" src="states/levelOneBoss.js"></script>
+    <script type="text/javascript" src="states/levelTwo.js"></script>
+    <script type="text/javascript" src="states/levelTwoBoss.js"></script>
+    <script type="text/javascript" src="states/gameOver.js"></script>
     <script type="text/javascript" src="states/highScore.js"></script>
-
-
-
-
-
 
     <script type="text/javascript">
    
@@ -35,15 +30,13 @@
 	game.state.add('load', loadState);
 	game.state.add('startMenu', startMenuState);
 	game.state.add('introStory',introStoryState);
-	game.state.add('playerSelect',playerSelectState);
-	game.state.add('sideScroll',sideScrollLevelState);
-	game.state.add('levelOneLoad',levelOneLoadState);
+	game.state.add('title',titleState);
 	game.state.add('levelOne', levelOneState);
-	game.state.add('levelOneBoss', levelOneBossState);
+	game.state.add('levelOneBoss',levelOneBossState);
+	game.state.add('levelTwo', levelTwoState);
+	game.state.add('levelTwoBoss',levelTwoBossState);
 	game.state.add('highScore', highScoreState);
 	game.state.add('gameOver', gameOverState);
-
-
 
 	game.state.start('load');
 

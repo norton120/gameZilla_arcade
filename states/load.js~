@@ -72,7 +72,7 @@ var loadState = {
 	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
 	
 	    game.load.image('bgCity', 'assets/images/bgCity.png');
-	    game.load.atlasJSONHash('booch','assets/images/textureAtlas/booch.png','assets/images/textureAtlas/booch.json');
+	    game.load.atlasJSONHash('booch','assets/images/textureAtlas/booch_pixelated_50_percent_reduction.png','assets/images/textureAtlas/booch.json');
 
 	},
 
@@ -398,7 +398,7 @@ var loadState = {
     }
 
     this.jump = function(){
-      if(!this.jumping){      
+      if(!this.jumping){
 	var dir = this.direction.charAt(0).toUpperCase() + this.direction.slice(1);      
 	this.avatar.animations.play('jumpStart'+dir);      
 	this.jumping = true;
@@ -416,7 +416,7 @@ var loadState = {
 	jDown.onComplete.add(resetStart, this);
 	
 	jUp.chain(jDown).start();
-        this.isFiring = false;
+
       }
     }
 
@@ -581,8 +581,7 @@ var loadState = {
 
 
 /*Side Scroller prototype level (to be extended)*/
-var sideScroller = function(){};
-sideScroller.prototype ={
+var sideScroller.prototype ={
 create: function(){ 
 
 /* Defaults. Override in game level states*/

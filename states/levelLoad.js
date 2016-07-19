@@ -1,5 +1,6 @@
-var sideScrollLevelState = {
+var sideScroller = function(game){}
 
+sideScroller.prototype ={
 create: function(){ 
 
 /* Defaults. Override in game level states*/

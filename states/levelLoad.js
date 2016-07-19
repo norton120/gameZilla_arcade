@@ -34,7 +34,7 @@ this.createExtendBefore();
         this.addPlayerToGame(game,player,player.displayName,100,308+(x*100));            
       }
       else{
-        player.hud = new HUDPlaceholder(game, player.displayName, (x-1)*340+10, 25);
+        player.hud = new HUD(game, player.displayName, player, (x-1)*340+10, 10,"inactive");
       }	      
     }	
 
@@ -89,7 +89,12 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
       
     });
 
-
+    for(b=0;b<this.baddies.length; b++){
+      baddy = this.baddies[b].avatar;
+      if(baddy.exists){
+        game.physics.arcade.overlap(this.playerAvatars, baddy, 
+      }
+    }
     // baddy-player basic hit collisions
     for(b=0; b<this.baddies.length; b++){
 	baddy = this.baddies[b].avatar;
@@ -159,9 +164,9 @@ this.bg.tilePosition.x = this.leftPlayer.world.x*(-.1);
           player.hero.standStill();	    
         }
       }
+      // Add new player during play
       else if(!player.active && player.controls.startPressed && (game.hardwareInterface.coinMode.freePlay || game.coinCredit>0)){
-	player.hud.container.destroy();
-        this.addPlayerToGame(game,player,player.displayName, this.leftPlayer.world.x, 348); 
+        this.addPlayerToGame(game,player,player.displayName, this.leftPlayer.world.x+50, 348); 
 	game.coinCredit--;
       }
       // update the top bar HUD's
@@ -183,6 +188,11 @@ this.updateExtendAfter();
 // @param {object} player the player object to be hit
 // @param {integer} damage the damage to apply 	
 hitPlayer: function(player,damage){
+ 
+     // we need the game.players.player parent object for 
+     // a few functions, so create that first.
+     var playerParent = game.players['player'+player.gamePad];	
+	
      // hit in the same life
      if(player.health > 1){
        player.hit(damage);
@@ -195,16 +205,13 @@ hitPlayer: function(player,damage){
      }
      // continue in coin mode
      else if (!game.hardwareInterface.coinMode.freePlay){	   
-       this.continue(player);
+       this.continue(playerParent);
      }
      // players can re-join other players in free mode multi-player games, but loose all points.
      else if (this.activePlayers.length >1){
-       var gameP = game.players['player'+player.gamePad];   
-       gameP.hero.kill();
-       var oldHudX = gameP.hud.x;
-       gameP.hud.container.destroy();
-       gameP.hud = new HUDPlaceholder(game, gameP.displayName,oldHudX,10);
-       gameP.active = false;
+       playerParent.hero.kill();
+       playerParent.hud.makeInactive();
+       playerParent.active = false;
        player.points = 0;
      }
      // free mode solo games cannot be continued
@@ -214,8 +221,37 @@ hitPlayer: function(player,damage){
 },
 
   // Continue option on coin mode games
-continue: function(player){
-  	//TODO: should have a solo and multi-player solution
+continue: function(playerParent){
+  // Multiple Players
+  if(this.activePlayers.length >1){
+    playerParent.hud.makeContinue();
+    playerParent.active = false;
+    playerParent.hero.kill();
+    playerParent.hud.countDown = 10;
+    var points = playerParent.hero.points;
+    game.time.events.repeat(1000,9, function(){
+      
+      if(!playerParent.active){
+        if(playerParent.hud.countDown > 0){
+	  playerParent.hud.countDown--;
+	}
+	else
+	{
+	  playerParent.hud.makeInactive();
+	}
+      }
+      // apply points to the continued player
+      else{
+        playerParent.hero.points += points;	      
+      }
+
+    });
+
+  }
+  // Solo continue
+  else{
+  }
+	
 },
 
 gameOver: function(){
@@ -251,8 +287,12 @@ addPlayerToGame: function(game,player, character, x, y){
      hudX =1;
      break;
   }
- this.actors.add(player.hero); 
- player.hud = new HUD(game, player.displayName, player.hero, (hudX)*340+10 ,10);
+ if(player.hud){	   
+   player.hud.makeActive();	 
+ }
+ else{  
+   player.hud = new HUD(game, player.displayName, player, (hudX)*340+10 ,10, "active");
+ }
  this.ghostIn(player.hero);
  game.time.events.add(400, function(){player.hero.visible = true;},this); 
 },
@@ -346,6 +386,8 @@ updateExtendAfter: function(){
 levelCompleteBefore: function(){
 },
 levelCompleteAfter: function(){
-}
+},
 
+render: function(){
+}	
 };

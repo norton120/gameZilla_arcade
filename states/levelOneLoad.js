@@ -32,68 +32,106 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
     return this;
   } 
 
-//TODO: replace placeholder with a state of the HUD. one hud to rule them all.
 /*HUD prototype*/
-  HUD = function(game, name, player, x, y){
-    this.container = game.add.sprite(x,y);	   
-    this.health = game.add.sprite(10,30,'health_bar',player.health);
-    this.container.addChild(this.health);
-    this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#db4605'});
-    this.lives = game.add.text(this.name.width+10,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#db4605"});
+  // @param {object} game the game object
+  // @param {string} name the display name of the player
+  // @param {object} player the player parent object
+  // @param {integer} x the x coordiate to insert the HUD at
+  // @param {integer} y the y coordiate to insert the HUD at
+  // @param {string} state the state of the HUD
+  HUD = function(game, name, player, x, y, state){
+    this.container = game.add.sprite(x,y);
+    this.container.fixedToCamera = true;
+    this.flashing = false;
+    this.flashTimer = 0;
+
+    this.makeActive =function(){	
+      state = "active";	    
+      this.container.removeChildren();
+      this.health = game.add.sprite(10,30,'health_bar',player.hero.health);
+      this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#db4605'});
+      this.lives = game.add.text(this.name.width+10,10, " X"+player.hero.lives, {font:'1.25rem Press Start 2P', fill:"#db4605"});
+      this.score = game.add.text(12,60, this.scoreText(player.hero.points), {font:'1rem Press Start 2P', fill:"#db4605"});
+       this.container.addChild(this.health);
+       this.container.addChild(this.score);
+       this.container.addChild(this.lives);
+       this.container.addChild(this.name);
+    }	
+
+    this.makeInactive = function(){
+      state = "inactive";	    
+      this.container.removeChildren();
+      this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#db4605'));
+      var message = game.hardwareInterface.coinMode.freePlay? " PRESS START":(game.coinCredit > 0? " PRESS START":" INSERT COIN");
+      this.message = game.add.text(0,20,message, game.setFont('1rem','#db4605'));
+      this.container.addChild(this.name);
+      this.container.addChild(this.message);
+    }
     
+    this.makeContinue = function(){
+      state = "continue";
+      this.container.removeChildren();
+      this.flashing = true;	
+      this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#db4605'));      
+      var countDown = 10;
+      var message = game.coinCredit > 0? " PRESS START":" CONTINUE :"+countDown;	      
+      this.message = game.add.text(0,20, message, game.setFont('1rem',"#db4605"));
+      this.container.addChild(this.name);
+      this.container.addChild(this.message);
+    }
+    
+    // formats the score with leading zeros
+    // @param {integer} score the score to format
     this.scoreText = function(score){
       var result = "00000000"+score;
       return result.substr(result.length-8);
     }
 
-    this.score = game.add.text(12,60, this.scoreText(player.points), {font:'1rem Press Start 2P', fill:"#db4605"});
-    this.container.addChild(this.score);
-    this.container.addChild(this.lives);
-    this.container.addChild(this.name);
-    this.container.fixedToCamera = true;   
-    
+      
+    switch(state){
+      case "active":
+        this.makeActive();
+      break;
+      case "continue":
+        this.makeContinue();
+      break;
+      case "inactive":
+        this.makeInactive();
+      break;
+    }
+
     this.update = function(){
-      this.health.frame = player.health;
-      this.lives.setText(" X"+player.lives);      
-      this.score.setText(this.scoreText(player.points));
+      if(this.flashing){
+        if(game.time.time > this.flashTimer){
+          this.alpha = this.alpha == 0? 1:0;
+	}  
+      }
+      else{
+        this.alpha =1;
+      }	
+
+      switch(state){
+        case "active":
+          this.health.frame = player.hero.health;
+          this.lives.setText(" X"+player.hero.lives);
+          this.score.setText(this.scoreText(player.hero.points));
+	break;
+        
+        case "continue":
+	  if(game.coinCredit < 1){this.message.setText(" CONTINUE :"+(this.countDown < 10? "0"+this.countDown : this.countDown));}
+        break;
+        
+        case "inactive":
+	  if(!game.hardwareInterface.coinMode.freePlay){
+	    this.flashing = game.coinCredit > 0;
+    	    this.message.setText((game.coinCredit > 0)? "PRESS START":"INSERT COIN");	    
+          }
+        break;
+      }	
     } 
     
 
     return this;   
-  }
-
-/*HUD placeholder prototype*/
-  HUDPlaceholder = function(game, name, x,y){
-    this.container = game.add.sprite(x,y);
-    this.name = game.add.text(15,0, name.toUpperCase(), game.setFont('1rem','#db4605'));
-    var message = game.hardwareInterface.coinMode.freePlay? " PRESS START":(game.coinCredit > 0? " PRESS START":" INSERT COIN");
-    this.message = game.add.text(0,20,message, game.setFont('1rem','#db4605'));
-    this.container.addChild(this.name);
-    this.container.addChild(this.message);
-    this.container.fixedToCamera = true;
-    this.flashTimer = 0;
-    this.update = function(){
-      if(!game.hardwareInterface.coinMode.freePlay){
-        var text = "INSERT COIN";
-	var flashing = false;
-        if(game.coinCredit > 0){
-	  text = "PRESS START";
-	  flashing = true;
-        }		
-        this.message.setText(text);
-        if(flashing){
-	  if (game.time.time > this.flashTimer){
-	    this.message.alpha = this.message.alpha == 0? 1:0;
-	    this.flashTimer = game.time.time+300;
-	  }
-	}  
-	else{
-	  this.message.alpha = 1;	  
-	}	  
-      }
-    }
-
-    return this;
   }
 
 /*Hero base prototype*/
@@ -232,6 +270,7 @@ game.add.text(50, 200, 'loading', {font: '2rem Press Start 2P', fill: '#fefefe'}
       //this.dying =true;
       this.lives = (this.lives-1 >0)? this.lives-1 : 0;	 
       this.exists = false;
+      //TODO: this should be looking for center maybe? 
       this.reset(this.x+100, 450);
     }
 

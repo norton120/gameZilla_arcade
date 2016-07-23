@@ -7,7 +7,7 @@ levelOneState.createExtendBefore = function(){
   game.world.setBounds(0,0,4000,768);
   this.bg = game.add.tileSprite(0,-250,2048,767,'bgCity');
   this.bg.fixedToCamera=true;
-
+console.log(game.input.gamepad);
 }
 
 levelOneState.createExtendAfter = function(){

@@ -1,7 +1,7 @@
 var introStoryState = {
 
 create: function(){
- 
+  console.log(game.highScores);
   // Add the typing sound	
   this.typeWriterSound = game.add.audio('typeWriter');
 
@@ -23,7 +23,7 @@ secondSlide: function(){
   game.time.events.add(14000,function(){this.keyboardCat.destroy();this.textTwo.destroy();this.thirdSlide();},this);
 },
 thirdSlide: function(){
-	
+  this.toHighScore();	
 },
 update:function(){
  game.updateInputKeyStates();
@@ -34,10 +34,13 @@ update:function(){
   }	  
 },
 
-toMenu: function(){
-  game.state.start('startMenu');
+toHighScore: function(){
+  game.state.start('highScore');
 },
 
+toMenu: function(){
+  game.state.start('startMenu');	
+},
 // Types out text, like the old school games
 // @param {object} target the text to update
 // @param {string} the text to type out	

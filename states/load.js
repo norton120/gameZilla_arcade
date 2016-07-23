@@ -16,6 +16,18 @@ var loadState = {
 
 	game.coinCredit= 0;
 
+	/*load the high scores*/
+	var loadHighScores = new XMLHttpRequest();
+	loadHighScores.onreadystatechange = function()
+	{
+	  if(loadHighScores.readyState == 4 && loadHighScores.status == 200){
+	    var highScores = JSON.parse(loadHighScores.responseText);
+   	    game.highScores = highScores.highScores;	    
+	  }
+	}
+	loadHighScores.open("GET",'high_scores.json',true);
+	loadHighScores.send();
+
 	/* polling function to collect coin balance as they are inserted */	
 	game.checkForCoins = function(){
 	
@@ -112,6 +124,9 @@ var loadState = {
 	for(x=1; x<4; x++){
 	  var player = game.players['player'+x];	
 	  player.active = false;	
+	  player.health = 5;
+	  player.lives = 3;
+	  player.points = 0;
 	  player.continueTimer = 0;
 	  player.hero ={};
 	  player.controls = {};    
@@ -148,8 +163,8 @@ var loadState = {
 	        var pad = 'pad'+x;
 	        player.controls.leftPressed = (game.input.gamepad[pad]._rawPad.axes[0] == -1);  	  
 	        player.controls.rightPressed = (game.input.gamepad[pad]._rawPad.axes[0] == 1);  	  
-	        player.controls.upPressed = (game.input.gamepad[pad]._rawPad.axes[2] == -1);  	  
-	        player.controls.downPressed = (game.input.gamepad[pad]._rawPad.axes[2] == 1);  	  
+	        player.controls.upPressed = (game.input.gamepad[pad]._rawPad.axes[1] == -1);  	  
+	        player.controls.downPressed = (game.input.gamepad[pad]._rawPad.axes[1] == 1);  	  
 	        player.controls.firePressed = (game.input.gamepad[pad]._rawPad.buttons[1].pressed);
 	        player.controls.jumpPressed = (game.input.gamepad[pad]._rawPad.buttons[2].pressed);
 	        player.controls.specialPressed = (game.input.gamepad[pad]._rawPad.buttons[3].pressed);
@@ -223,16 +238,17 @@ var loadState = {
     this.container.fixedToCamera = true;
     this.flashing = false;
     this.flashTimer = 0;
+    this.state =  "";
 
     this.makeActive =function(){	
-      state = "active";	   
+      this.state = "active";	   
       this.flashing = false; 
 
       this.container.removeChildren();
-      this.health = game.add.sprite(10,30,'health_bar',player.hero.health);
+      this.health = game.add.sprite(10,30,'health_bar',player.health);
       this.name = game.add.text(12,10, name.toUpperCase(), {font:'1rem Press Start 2P', fill: '#db4605'});
-      this.lives = game.add.text(this.name.width+10,10, " X"+player.hero.lives, {font:'1.25rem Press Start 2P', fill:"#db4605"});
-      this.score = game.add.text(12,60, this.scoreText(player.hero.points), {font:'1rem Press Start 2P', fill:"#db4605"});
+      this.lives = game.add.text(this.name.width+10,10, " X"+player.lives, {font:'1.25rem Press Start 2P', fill:"#db4605"});
+      this.score = game.add.text(12,60, this.scoreText(player.points), {font:'1rem Press Start 2P', fill:"#db4605"});
        this.container.addChild(this.health);
        this.container.addChild(this.score);
        this.container.addChild(this.lives);
@@ -240,7 +256,7 @@ var loadState = {
     }	
 
     this.makeInactive = function(){
-      state = "inactive";	    
+      this.state = "inactive";	    
       this.container.removeChildren();
       this.name = game.add.text(12,10, name.toUpperCase(), game.setFont('1rem','#db4605'));
       var message = game.hardwareInterface.coinMode.freePlay? " PRESS START":(game.coinCredit > 0? " PRESS START":" INSERT COIN");
@@ -250,7 +266,7 @@ var loadState = {
     }
     
     this.makeContinue = function(){
-      state = "continue";
+      this.state = "continue";
       this.flashing = true;
       this.container.removeChildren();
       this.name = game.add.text(12,10, name.toUpperCase(), game.setFont('1rem','#db4605'));      
@@ -291,11 +307,11 @@ var loadState = {
         this.container.alpha =1;
       }	
 
-      switch(state){
+      switch(this.state){
         case "active":
-          this.health.frame = player.hero.health;
-          this.lives.setText(" X"+player.hero.lives);
-          this.score.setText(this.scoreText(player.hero.points));
+          this.health.frame = player.health;
+          this.lives.setText(" X"+player.lives);
+          this.score.setText(this.scoreText(player.points));
 	break;
         
         case "continue":
@@ -337,9 +353,13 @@ var loadState = {
     this.avatar.body.setSize(this.avatar.width,20,0,this.avatar.height-20);
     // Base props
     this.gamePad = gamePad;
-    this.points = 0;
-    this.health = 5;
-    this.lives = 3; 
+    
+    // Reference the parent player object
+    this.parentPlayer = game.players['player'+this.gamePad];
+    
+    //this.points = 0;
+    //this.health = 5;
+    //this.lives = 3; 
     this.isDying = false;
     this.isGhostIn = true;
     this.ghost = true;
@@ -440,7 +460,7 @@ var loadState = {
       this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
       var damage = damage || 1;
       this.body.velocity.x = this.direction == "right"? -150:150; 
-      this.health = (this.health-damage > -1)? this.health-damage: 0;
+      this.parentPlayer.health = (this.parentPlayer.health-damage > -1)? this.parentPlayer.health-damage: 0;
       // if a collision stops the fire or jump animations, players get 'stuck'
       // this will unstick them.
       this.isFiring = false;
@@ -449,16 +469,16 @@ var loadState = {
 
     this.death = function(){
       //this.dying =true;
-      this.lives = (this.lives-1 >0)? this.lives-1 : 0;	 
+      this.parentPlayer.lives = (this.parentPlayer.lives-1 >0)? this.parentPlayer.lives-1 : 0;	 
       this.exists = false;
       this.reset(game.camera.x+300, 450);
     }
 
     this.addHealth = function(points){
-      this.health = (this.health+points < 6)? this.health+points : 5;
+      this.parentPlayer.health = (this.parentPlayer.health+points < 6)? this.parentPlayer.health+points : 5;
     }
     this.addPoints = function(points){
-      this.points += points;
+      this.parentPlayer.points += points;
     }
 
     // weapons
@@ -788,12 +808,12 @@ hitPlayer: function(player,damage){
      var playerParent = game.players['player'+player.gamePad];	
 	
      // hit in the same life
-     if(player.health > 1){
+     if(playerParent.health > 1){
        player.hit(damage);
 
      }
      // new life 
-     else if(player.lives > 1){
+     else if(playerParent.lives > 1){
        player.death();
        player.addHealth(5);
      }
@@ -817,7 +837,7 @@ hitPlayer: function(player,damage){
   // Continue option on coin mode games
 continue: function(playerParent){
 
-  var points = playerParent.hero.points;
+  var points = playerParent.points;
   playerParent.hud.makeContinue();
   playerParent.continueTimer =10;
   playerParent.active = false;
@@ -836,7 +856,7 @@ continue: function(playerParent){
     // apply points to the continued player
     else{
       if(playerParent.continueTimer > 0){
-        playerParent.hero.points += points;
+        playerParent.points += points;
 	playerParent.continueTimer = 0; 
       }  
     }
@@ -876,11 +896,12 @@ addPlayerToGame: function(game,player, character, x, y){
      hudX =1;
      break;
   }
- if(player.hud){	   
+ if(player.hud && player.hud.state!="active"){	   
    player.hud.makeActive();	 
  }
  else{  
    player.hud = new HUD(game, player.displayName, player, (hudX)*340+10 ,10, "active");
+   console.log(player.hud.state);
  }
  this.ghostIn(player.hero);
  game.time.events.add(400, function(){player.hero.visible = true;},this); 

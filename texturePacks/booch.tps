@@ -188,6 +188,18 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">../assets/images/booch/death_left_1.png</key>
+            <key type="filename">../assets/images/booch/death_left_2.png</key>
+            <key type="filename">../assets/images/booch/death_left_3.png</key>
+            <key type="filename">../assets/images/booch/death_left_4.png</key>
+            <key type="filename">../assets/images/booch/death_left_5.png</key>
+            <key type="filename">../assets/images/booch/death_left_6.png</key>
+            <key type="filename">../assets/images/booch/death_right_1.png</key>
+            <key type="filename">../assets/images/booch/death_right_2.png</key>
+            <key type="filename">../assets/images/booch/death_right_3.png</key>
+            <key type="filename">../assets/images/booch/death_right_4.png</key>
+            <key type="filename">../assets/images/booch/death_right_5.png</key>
+            <key type="filename">../assets/images/booch/death_right_6.png</key>
             <key type="filename">../assets/images/booch/fire_left_1.png</key>
             <key type="filename">../assets/images/booch/fire_left_2.png</key>
             <key type="filename">../assets/images/booch/fire_left_3.png</key>
@@ -226,6 +238,22 @@
             <key type="filename">../assets/images/booch/run_right_6.png</key>
             <key type="filename">../assets/images/booch/run_right_7.png</key>
             <key type="filename">../assets/images/booch/run_right_8.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_1.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_2.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_3.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_4.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_5.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_6.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_7.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_left_8.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_1.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_2.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_3.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_4.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_5.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_6.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_7.png</key>
+            <key type="filename">../assets/images/booch/run_shoot_right_8.png</key>
             <key type="filename">../assets/images/booch/stand_left.png</key>
             <key type="filename">../assets/images/booch/stand_right.png</key>
             <struct type="IndividualSpriteSettings">

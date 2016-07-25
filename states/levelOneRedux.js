@@ -7,10 +7,11 @@ levelOneState.createExtendBefore = function(){
   game.world.setBounds(0,0,4000,768);
   this.bg = game.add.tileSprite(0,-250,2048,767,'bgCity');
   this.bg.fixedToCamera=true;
-console.log(game.input.gamepad);
+  this.fg = game.add.image(0,0,'fgCity');
 }
 
 levelOneState.createExtendAfter = function(){
+
   this.trolls = [];
   for(x=0;x<20;x++){
     troll = new Troll(game,0,0);
@@ -21,9 +22,9 @@ levelOneState.createExtendAfter = function(){
   }
 
 /* time to add the bad guys!*/  
-  this.addBaddy("trolls",820,448,4);
-  this.addBaddy("trolls",1500,490,4)
-  this.addBaddy("trolls",1200,399,4);
+  this.addBaddy("trolls",820,568,4);
+  this.addBaddy("trolls",1500,630,4)
+  this.addBaddy("trolls",1200,599,4);
   this.addBaddy("trolls",1050,600,4);
 
 /* add the exit*/

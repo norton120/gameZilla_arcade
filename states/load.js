@@ -64,6 +64,7 @@ var loadState = {
 	    
 /*sprites*/
 	    game.load.image('blackFill', 'assets/images/black.png');
+	   
 	    game.load.image('playerBooch', 'assets/images/player_select_booch.png');
 	    game.load.image('playerNick', 'assets/images/player_select_nick.png');
 	    game.load.image('playerMatt', 'assets/images/player_select_matt.png');
@@ -83,6 +84,7 @@ var loadState = {
 	    game.load.spritesheet('troll', 'assets/images/troll_sprite.png',95.5,119);
 	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
 	
+	    game.load.image('fgCity','assets/images/38JacksonForeground.png');
 	    game.load.image('bgCity', 'assets/images/bgCity.png');
 	    game.load.atlasJSONHash('booch','assets/images/textureAtlas/booch.png','assets/images/textureAtlas/booch.json');
 
@@ -145,6 +147,7 @@ var loadState = {
 	game.jumpKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 	game.fireKey = game.input.keyboard.addKey(Phaser.Keyboard.X);
 	game.specialKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+	game.debugKey = game.input.keyboard.addKey(Phaser.Keyboard.D);
 	game.p1StartKey = game.input.keyboard.addKey(Phaser.Keyboard.M);
 	game.p2StartKey = game.input.keyboard.addKey(Phaser.Keyboard.N);
 	game.p3StartKey = game.input.keyboard.addKey(Phaser.Keyboard.A);
@@ -180,6 +183,7 @@ var loadState = {
   	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
 	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
 	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
+	    game.players.player1.controls.debugPressed = (game.debugKey.isDown);
 
  	    // add fake start keys for the 3 players
 	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
@@ -196,6 +200,14 @@ var loadState = {
 	game.setFont = function(size,color){
 	  return({font: size+' Press Start 2P',fill: color});
 	}
+
+/************************************************************************************************************************	
+ *															*
+ *															*
+ *                                                  CHARACTER PROTOTYPES 						*
+ *                                                  									*
+ *															*
+ ************************************************************************************************************************/	
 
 /* Asset Prototypes */
 
@@ -357,11 +369,7 @@ var loadState = {
     // Reference the parent player object
     this.parentPlayer = game.players['player'+this.gamePad];
     
-    //this.points = 0;
-    //this.health = 5;
-    //this.lives = 3; 
     this.isDying = false;
-    this.isGhostIn = true;
     this.ghost = true;
     this.isFiring = false;
     this.actionSpeed = 170*speed;
@@ -376,13 +384,18 @@ var loadState = {
     this.feet = function(){return(this.avatar.world.y + this.avatar.height);}
 
     // animations
-    this.avatar.animations.add('runRight', Phaser.Animation.generateFrameNames('run_right_', 1,8), 12, true);
-    this.avatar.animations.add('runLeft', Phaser.Animation.generateFrameNames('run_left_', 1,8), 12, true);
     this.avatar.animations.add('jumpStartRight', Phaser.Animation.generateFrameNames('jump_right_', 1,2), 16, false);
     this.avatar.animations.add('jumpLandRight', Phaser.Animation.generateFrameNames('land_right_', 1,5), 18, false);
     this.avatar.animations.add('jumpStartLeft', Phaser.Animation.generateFrameNames('jump_left_', 1,2), 16, false);
     this.avatar.animations.add('jumpLandLeft', Phaser.Animation.generateFrameNames('land_left_', 1,5), 18, false);
+    
     // keep a reference to these, since they need callbacks
+    var runRight = this.avatar.animations.add('runRight', Phaser.Animation.generateFrameNames('run_right_', 1,8), 12, true);
+    var runLeft = this.avatar.animations.add('runLeft', Phaser.Animation.generateFrameNames('run_left_', 1,8), 12, true);
+    var runShootRight = this.avatar.animations.add('runShootRight', Phaser.Animation.generateFrameNames('run_shoot_right_',1,8),12, true);
+    var runShootLeft = this.avatar.animations.add('runShootLeft', Phaser.Animation.generateFrameNames('run_shoot_left_',1,8),12, true);
+    var dieRight = this.avatar.animations.add('deathRight', Phaser.Animation.generateFrameNames('death_right_',1,6),8, false);
+    var dieLeft = this.avatar.animations.add('deathLeft', Phaser.Animation.generateFrameNames('death_left_',1,6),8,false);
     var fireLeft = this.avatar.animations.add('fireLeft', Phaser.Animation.generateFrameNames('fire_left_',1,4),18,false);
     var fireRight = this.avatar.animations.add('fireRight', Phaser.Animation.generateFrameNames('fire_right_',1,4),18,false);
   
@@ -390,9 +403,12 @@ var loadState = {
 
     this.run =function(direction, shooting, frozen){
       this.direction = direction;
-      animation = (shooting? 'shoot' : 'run') + direction.charAt(0).toUpperCase() + direction.slice(1);
-      this.avatar.animations.play(animation);	
+      var animation = 'run'+(shooting? "Shoot":"")+this.direction.charAt(0).toUpperCase() + this.direction.slice(1);
+  if(!this.avatar.animations.currentAnim.isPlaying || animation != this.avatar.animations.currentAnim.name){
+    this.avatar.animations.play(animation);	
+  }
       if(!frozen){this.body.velocity.x = (direction == 'right'? this.actionSpeed : this.actionSpeed*-1);}
+      if(shooting){this.isFiring = true; this.primaryWeapon.fire(this.direction); this.isFiring = false;}
     }
     
     this.moveDown = function(){
@@ -449,15 +465,17 @@ var loadState = {
       if(!this.isFiring){	    
 	this.isFiring = true;	    
         var anim = this.direction == 'right'? fireRight:fireLeft;
-        anim.play();
+	anim.play();
         anim.onComplete.add(function(){this.primaryWeapon.fire(this.direction); this.isFiring = false;},this);
       }
     }
 
     this.hit = function(damage){
+      this.ghost = true;
       this.avatar.animations.stop();	    
-      this.isHitTimer = game.time.time +600;	
-      this.avatar.frameName = "land_"+this.direction.toLowerCase()+"_5";
+      game.time.events.add(2000,function(){this.ghost =false;},this);
+      this.isHitTimer = game.time.time +400;	
+      this.avatar.frameName = "land_"+this.direction+"_5";
       var damage = damage || 1;
       this.body.velocity.x = this.direction == "right"? -150:150; 
       this.parentPlayer.health = (this.parentPlayer.health-damage > -1)? this.parentPlayer.health-damage: 0;
@@ -468,10 +486,21 @@ var loadState = {
     }
 
     this.death = function(){
-      //this.dying =true;
+      this.isDying =true;
+      var anim = (this.direction == "right")? dieRight: dieLeft;
+      this.avatar.body.velocity.x=0;
+      this.avatar.body.velocity.y=0;
+      anim.play();
       this.parentPlayer.lives = (this.parentPlayer.lives-1 >0)? this.parentPlayer.lives-1 : 0;	 
-      this.exists = false;
-      this.reset(game.camera.x+300, 450);
+      anim.onComplete.add(function(){game.time.events.add(1000,function(){
+	  this.avatar.visible = false;    
+          this.reset(game.camera.x+300, 450);
+	  this.avatar.visible = true;
+	  this.isDying = false;    
+	  this.ghost = true;    
+	  game.time.events.add(1000,function(){this.ghost = false;},this);
+        },this);	
+      },this);	 
     }
 
     this.addHealth = function(points){
@@ -600,6 +629,13 @@ var loadState = {
 };
 
 
+/************************************************************************************************************************	
+ *															*
+ *															*
+ *                                                  LEVEL PROTOTYPES 							*
+ *                                                  									*
+ *															*
+ ************************************************************************************************************************/
 /*Side Scroller prototype level (to be extended)*/
 var sideScroller = function(){};
 sideScroller.prototype ={
@@ -609,7 +645,6 @@ create: function(){
 
 // platform is the tileSprite to be used as the ground.	
 this.platform = 'concrete';
-	
 this.createExtendBefore();
 
 /*Coin Listener*/
@@ -617,10 +652,10 @@ this.createExtendBefore();
       game.time.events.loop(500,game.checkForCoins,this);
     }
 
-    this.street = game.add.tileSprite(0,468, 4000, 300, this.platform);
+    this.street = game.add.tileSprite(0,568, 4000, 200, this.platform);
     game.physics.enable(this.street, Phaser.Physics.ARCADE);
     this.street.enableBody = true;
-    
+    this.street.alpha = 0;
 /*Action Groups*/
   /* these can be phaser groups or arrays, since phaser
    * only supports a single group per sprite
@@ -634,7 +669,7 @@ this.createExtendBefore();
     for(x=1; x<4; x++){
       var player = game.players['player'+x];
       if(player.active){
-        this.addPlayerToGame(game,player,player.displayName,100,308+(x*100));            
+        this.addPlayerToGame(game,player,player.displayName,100,568+(x*10));            
       }
       else{
         player.hud = new HUD(game, player.displayName, player, (x-1)*340+10, 10,"inactive");
@@ -687,7 +722,7 @@ this.updateExtendBefore();
     
     // set ghost status before collisions
     this.activePlayers.map(function(p){
-      p.hero.ghost = p.hero.isHitTimer+1500 > game.time.time || p.hero.isGhostIn;
+     // p.hero.ghost = p.hero.isHitTimer+1500 > game.time.time || p.hero.isGhostIn;
       
     });
 
@@ -715,7 +750,8 @@ this.updateExtendBefore();
 /*Player Controls and apperance*/
     for(x=1; x<4; x++){
       var player = game.players['player'+x];    
-      if(player.active && player.hero.isHitTimer < game.time.time){
+      if(player.controls.debugPressed){console.log(player);}
+      if(player.active && player.hero.isHitTimer < game.time.time && !player.hero.isDying){
 	// Set players alpha lower when a ghost      
 	player.hero.alpha = player.hero.ghost? .4 : 1;	
  
@@ -726,8 +762,8 @@ this.updateExtendBefore();
 
         if(!player.hero.jumping){player.hero.body.velocity.y = 0;}
 
-        // fire key
-        if(player.controls.firePressed && !player.hero.jumping){player.hero.fire();} 
+        // standing fire 
+        if(player.controls.firePressed && !(player.hero.jumping || player.controls.leftPressed || player.controls.rightPressed)){player.hero.fire();} 
     
         // jump key
         if(player.controls.jumpPressed && !player.hero.isFiringi){player.hero.jump();}	
@@ -743,7 +779,7 @@ this.updateExtendBefore();
  	    player.hero.moveRight();	  
 	  }
 	  else{	  
-            player.hero.run('right',player.hero.isFiring, player.hero.rightFreeze);	    
+            player.hero.run('right',player.controls.firePressed, player.hero.rightFreeze);	    
           }	
 	}
         else if(player.controls.leftPressed){
@@ -751,7 +787,7 @@ this.updateExtendBefore();
 	    player.hero.moveLeft();	  
 	  }
 	  else{	  
-            player.hero.run('left',player.hero.isFiring, player.hero.leftFreeze);	    
+            player.hero.run('left',player.controls.firePressed, player.hero.leftFreeze);	    
         
 	  }
 	}  
@@ -802,7 +838,7 @@ this.updateExtendAfter();
 // @param {object} player the player object to be hit
 // @param {integer} damage the damage to apply 	
 hitPlayer: function(player,damage){
- 
+ if(!(player.isDying || player.ghost)){
      // we need the game.players.player parent object for 
      // a few functions, so create that first.
      var playerParent = game.players['player'+player.gamePad];	
@@ -832,6 +868,7 @@ hitPlayer: function(player,damage){
      else{
        this.gameOver(); 
      }
+ }   
 },
 
   // Continue option on coin mode games
@@ -860,14 +897,13 @@ continue: function(playerParent){
 	playerParent.continueTimer = 0; 
       }  
     }
-  });
+  }); 
 },
 
 gameOver: function(){
   game.state.start('gameOver');	
 },
 
-//TODO: why are we passing the character? why can't we reference that from the player? 
 // Introduces a player to the game
 // @param {object} game the game object
 // @param {object} player  the player to be added
@@ -901,7 +937,6 @@ addPlayerToGame: function(game,player, character, x, y){
  }
  else{  
    player.hud = new HUD(game, player.displayName, player, (hudX)*340+10 ,10, "active");
-   console.log(player.hud.state);
  }
  this.ghostIn(player.hero);
  game.time.events.add(400, function(){player.hero.visible = true;},this); 
@@ -911,8 +946,8 @@ addPlayerToGame: function(game,player, character, x, y){
 // @param {object} the object to 'ghost in' 	
 ghostIn: function(hero){
   var time = 100;	
-  game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.isGhostIn= !hero.isGhostIn; time=Math.floor(time*.5);},this)},this);
-  game.time.events.add(3500, function(){hero.isGhostIn=false;});
+  game.time.events.add(1500, function(){game.time.events.repeat(time,15,function(){hero.ghost = !hero.ghost; time=Math.floor(time*.5);},this)},this);
+  game.time.events.add(3500, function(){hero.ghost=false;});
 },
 
 // returns an array of active players	

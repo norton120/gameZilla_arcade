@@ -1,7 +1,6 @@
 var introStoryState = {
 
 create: function(){
-  console.log(game.highScores);
   // Add the typing sound	
   this.typeWriterSound = game.add.audio('typeWriter');
 

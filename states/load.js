@@ -384,16 +384,26 @@ var loadState = {
     this.feet = function(){return(this.avatar.world.y + this.avatar.height);}
 
     // animations
+<<<<<<< HEAD
+=======
+    this.avatar.animations.add('runRight', Phaser.Animation.generateFrameNames('run_right_', 1,8), 12, true);
+    this.avatar.animations.add('runLeft', Phaser.Animation.generateFrameNames('run_left_', 1,8), 12, true);
+    this.avatar.animations.add('runShootRight', Phaser.Animation.generateFrameNames('run_shoot_right_',1,8),12, true);
+    this.avatar.animations.add('runShootLeft', Phaser.Animation.generateFrameNames('run_shoot_left_',1,8),12, true);
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
     this.avatar.animations.add('jumpStartRight', Phaser.Animation.generateFrameNames('jump_right_', 1,2), 16, false);
     this.avatar.animations.add('jumpLandRight', Phaser.Animation.generateFrameNames('land_right_', 1,5), 18, false);
     this.avatar.animations.add('jumpStartLeft', Phaser.Animation.generateFrameNames('jump_left_', 1,2), 16, false);
     this.avatar.animations.add('jumpLandLeft', Phaser.Animation.generateFrameNames('land_left_', 1,5), 18, false);
     
     // keep a reference to these, since they need callbacks
+<<<<<<< HEAD
     var runRight = this.avatar.animations.add('runRight', Phaser.Animation.generateFrameNames('run_right_', 1,8), 12, true);
     var runLeft = this.avatar.animations.add('runLeft', Phaser.Animation.generateFrameNames('run_left_', 1,8), 12, true);
     var runShootRight = this.avatar.animations.add('runShootRight', Phaser.Animation.generateFrameNames('run_shoot_right_',1,8),12, true);
     var runShootLeft = this.avatar.animations.add('runShootLeft', Phaser.Animation.generateFrameNames('run_shoot_left_',1,8),12, true);
+=======
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
     var dieRight = this.avatar.animations.add('deathRight', Phaser.Animation.generateFrameNames('death_right_',1,6),8, false);
     var dieLeft = this.avatar.animations.add('deathLeft', Phaser.Animation.generateFrameNames('death_left_',1,6),8,false);
     var fireLeft = this.avatar.animations.add('fireLeft', Phaser.Animation.generateFrameNames('fire_left_',1,4),18,false);
@@ -403,10 +413,15 @@ var loadState = {
 
     this.run =function(direction, shooting, frozen){
       this.direction = direction;
+<<<<<<< HEAD
       var animation = 'run'+(shooting? "Shoot":"")+this.direction.charAt(0).toUpperCase() + this.direction.slice(1);
   if(!this.avatar.animations.currentAnim.isPlaying || animation != this.avatar.animations.currentAnim.name){
     this.avatar.animations.play(animation);	
   }
+=======
+      animation = (shooting? 'runShoot' : 'run') + direction.charAt(0).toUpperCase() + direction.slice(1);
+      this.avatar.animations.play(animation);	
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
       if(!frozen){this.body.velocity.x = (direction == 'right'? this.actionSpeed : this.actionSpeed*-1);}
       if(shooting){this.isFiring = true; this.primaryWeapon.fire(this.direction); this.isFiring = false;}
     }
@@ -473,8 +488,12 @@ var loadState = {
     this.hit = function(damage){
       this.ghost = true;
       this.avatar.animations.stop();	    
+<<<<<<< HEAD
       game.time.events.add(2000,function(){this.ghost =false;},this);
       this.isHitTimer = game.time.time +400;	
+=======
+      this.isHitTimer = game.time.time +600;	
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
       this.avatar.frameName = "land_"+this.direction+"_5";
       var damage = damage || 1;
       this.body.velocity.x = this.direction == "right"? -150:150; 
@@ -485,8 +504,10 @@ var loadState = {
       this.jumping = false;
     }
 
+//TODO: fix death! 
     this.death = function(){
       this.isDying =true;
+<<<<<<< HEAD
       var anim = (this.direction == "right")? dieRight: dieLeft;
       this.avatar.body.velocity.x=0;
       this.avatar.body.velocity.y=0;
@@ -501,6 +522,16 @@ var loadState = {
 	  game.time.events.add(1000,function(){this.ghost = false;},this);
         },this);	
       },this);	 
+=======
+     // var anim = this.direction = "right"? dieRight: dieLeft;
+     // anim.play();
+     // anim.onComplete.add(function(){
+  //      this.isDying = false;
+    //    this.parentPlayer.lives = (this.parentPlayer.lives-1 >0)? this.parentPlayer.lives-1 : 0;	 
+      //  this.exists = false;
+     //   this.reset(game.camera.x+300, 450);
+   //   },this);	 
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
     }
 
     this.addHealth = function(points){
@@ -750,8 +781,12 @@ this.updateExtendBefore();
 /*Player Controls and apperance*/
     for(x=1; x<4; x++){
       var player = game.players['player'+x];    
+<<<<<<< HEAD
       if(player.controls.debugPressed){console.log(player);}
       if(player.active && player.hero.isHitTimer < game.time.time && !player.hero.isDying){
+=======
+      if(player.active && player.hero.isHitTimer < game.time.time && !player.isDying){
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
 	// Set players alpha lower when a ghost      
 	player.hero.alpha = player.hero.ghost? .4 : 1;	
  
@@ -838,7 +873,11 @@ this.updateExtendAfter();
 // @param {object} player the player object to be hit
 // @param {integer} damage the damage to apply 	
 hitPlayer: function(player,damage){
+<<<<<<< HEAD
  if(!(player.isDying || player.ghost)){
+=======
+ if(!player.isDying){
+>>>>>>> 402ebffe692b62d9a909f4c9514613529da4c2cc
      // we need the game.players.player parent object for 
      // a few functions, so create that first.
      var playerParent = game.players['player'+player.gamePad];	
@@ -852,6 +891,7 @@ hitPlayer: function(player,damage){
      else if(playerParent.lives > 1){
        player.death();
        player.addHealth(5);
+   	 
      }
      // continue in coin mode
      else if (!game.hardwareInterface.coinMode.freePlay){	   

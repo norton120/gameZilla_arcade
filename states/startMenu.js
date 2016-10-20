@@ -26,7 +26,7 @@ create: function(){
 
 	this.heroIcons = game.add.group();
 	this.heroIcons.create(425,600,'booch').addChild(game.add.text(10,160,'Matt',{font:'1rem Press Start 2P', fill: '#fefefe'}));
-	this.heroIcons.create(625,600,'booch').addChild(game.add.text(10,160,'Nick',{font:'1rem Press Start 2P', fill:'#fefefe'}));
+	this.heroIcons.create(625,600,'nick').addChild(game.add.text(10,160,'Nick',{font:'1rem Press Start 2P', fill:'#fefefe'}));
 	this.heroIcons.create(825,600,'booch').addChild(game.add.text(-10,160,'Anthony', {font:'1rem Press Start 2P', fill:'#fefefe'}));
 	this.heroIcons.setAll('frameName',"stand_right");
 	this.heroIcons.scale.setTo(.75,.75);

@@ -87,7 +87,7 @@ var loadState = {
 	    game.load.image('fgCity','assets/images/38JacksonForeground.png');
 	    game.load.image('bgCity', 'assets/images/bgCity.png');
 	    game.load.atlasJSONHash('booch','assets/images/textureAtlas/booch.png','assets/images/textureAtlas/booch.json');
-
+            game.load.atlasJSONHash('nick','assets/images/textureAtlas/nick.png','assets/images/textureAtlas/nick.json');
 	},
 
  create: function(){
@@ -177,13 +177,13 @@ var loadState = {
 	  }  
 	  else
 	  {
-	    game.players.player1.controls.leftPressed = (game.cursors.left.isDown);
-  	    game.players.player1.controls.rightPressed = (game.cursors.right.isDown);
-	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
-  	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
-	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
-	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
-	    game.players.player1.controls.debugPressed = (game.debugKey.isDown);
+	    game.players.player2.controls.leftPressed = (game.cursors.left.isDown);
+  	    game.players.player2.controls.rightPressed = (game.cursors.right.isDown);
+	    game.players.player2.controls.upPressed = (game.cursors.up.isDown);
+  	    game.players.player2.controls.downPressed = (game.cursors.down.isDown);
+	    game.players.player2.controls.firePressed = (game.fireKey.isDown);
+	    game.players.player2.controls.jumpPressed = (game.jumpKey.isDown);	 
+	    game.players.player2.controls.debugPressed = (game.debugKey.isDown);
 
  	    // add fake start keys for the 3 players
 	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
@@ -609,7 +609,7 @@ var loadState = {
 
 		/*Nick*/
 		  Nick = function(game, x, y){
-		    Hero.call(this,game,x, y, 'booch',2, .8);
+		    Hero.call(this,game,x, y, 'nick',2, .8);
 		  }	  
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;

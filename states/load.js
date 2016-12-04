@@ -402,13 +402,16 @@ var loadState = {
     // actions
 
     this.run =function(direction, shooting, frozen){
+      try {
       this.direction = direction;
       var animation = 'run'+(shooting? "Shoot":"")+this.direction.charAt(0).toUpperCase() + this.direction.slice(1);
   if(!this.avatar.animations.currentAnim.isPlaying || animation != this.avatar.animations.currentAnim.name){
-    this.avatar.animations.play(animation);	
+     this.avatar.animations.play(animation);	
   }
       if(!frozen){this.body.velocity.x = (direction == 'right'? this.actionSpeed : this.actionSpeed*-1);}
       if(shooting){this.isFiring = true; this.primaryWeapon.fire(this.direction); this.isFiring = false;}
+      }
+      catch(e){ }
     }
     
     this.moveDown = function(){
@@ -434,6 +437,7 @@ var loadState = {
     }
 
     this.jump = function(){
+      try{
       if(!this.jumping){      
 	var dir = this.direction.charAt(0).toUpperCase() + this.direction.slice(1);      
 	this.avatar.animations.play('jumpStart'+dir);      
@@ -454,6 +458,7 @@ var loadState = {
 	jUp.chain(jDown).start();
         this.isFiring = false;
       }
+      }catch(e){}
     }
 
     this.standStill = function(){
@@ -471,6 +476,7 @@ var loadState = {
     }
 
     this.hit = function(damage){
+      try{
       this.ghost = true;
       this.avatar.animations.stop();	    
       game.time.events.add(2000,function(){this.ghost =false;},this);
@@ -483,9 +489,11 @@ var loadState = {
       // this will unstick them.
       this.isFiring = false;
       this.jumping = false;
+      }catch(e){}
     }
 
     this.death = function(){
+      try{
       this.isDying =true;
       var anim = (this.direction == "right")? dieRight: dieLeft;
       this.avatar.body.velocity.x=0;
@@ -500,7 +508,8 @@ var loadState = {
 	  this.ghost = true;    
 	  game.time.events.add(1000,function(){this.ghost = false;},this);
         },this);	
-      },this);	 
+      },this);
+      }catch(e){}	 
     }
 
     this.addHealth = function(points){

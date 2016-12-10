@@ -177,13 +177,13 @@ var loadState = {
 	  }  
 	  else
 	  {
-	    game.players.player2.controls.leftPressed = (game.cursors.left.isDown);
-  	    game.players.player2.controls.rightPressed = (game.cursors.right.isDown);
-	    game.players.player2.controls.upPressed = (game.cursors.up.isDown);
-  	    game.players.player2.controls.downPressed = (game.cursors.down.isDown);
-	    game.players.player2.controls.firePressed = (game.fireKey.isDown);
-	    game.players.player2.controls.jumpPressed = (game.jumpKey.isDown);	 
-	    game.players.player2.controls.debugPressed = (game.debugKey.isDown);
+	    game.players.player1.controls.leftPressed = (game.cursors.left.isDown);
+  	    game.players.player1.controls.rightPressed = (game.cursors.right.isDown);
+	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
+  	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
+	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
+	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
+	    game.players.player1.controls.debugPressed = (game.debugKey.isDown);
 
  	    // add fake start keys for the 3 players
 	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
@@ -378,6 +378,7 @@ var loadState = {
     this.leftFreeze = false;
     this.rightFreeze = false;
     this.isHitTimer = 0;
+    this.pacedFire = 0;
     this.isFiringTimer = 0;
 
     // Calculated Props
@@ -403,8 +404,10 @@ var loadState = {
 
     this.run =function(direction, shooting, frozen){
       try {
+      if(shooting){this.pacedFire = game.time.time + 400;}
+      var firing = shooting || this.pacedFire > game.time.time; 		
       this.direction = direction;
-      var animation = 'run'+(shooting? "Shoot":"")+this.direction.charAt(0).toUpperCase() + this.direction.slice(1);
+      var animation = 'run'+(firing? "Shoot":"")+this.direction.charAt(0).toUpperCase() + this.direction.slice(1);
   if(!this.avatar.animations.currentAnim.isPlaying || animation != this.avatar.animations.currentAnim.name){
      this.avatar.animations.play(animation);	
   }
@@ -622,7 +625,8 @@ var loadState = {
 		  }	  
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;
-
+		    	
+	
 	  // Baddies
 	  	/*Troll*/
 		  Troll = function(game,x,y){
@@ -787,8 +791,8 @@ this.updateExtendBefore();
 	  if(player.hero.jumping){
  	    player.hero.moveRight();	  
 	  }
-	  else{	  
-            player.hero.run('right',player.controls.firePressed, player.hero.rightFreeze);	    
+	  else{	
+            player.hero.run('right', player.controls.firePressed, player.hero.rightFreeze);	    
           }	
 	}
         else if(player.controls.leftPressed){
@@ -796,7 +800,7 @@ this.updateExtendBefore();
 	    player.hero.moveLeft();	  
 	  }
 	  else{	  
-            player.hero.run('left',player.controls.firePressed, player.hero.leftFreeze);	    
+            player.hero.run('left', player.controls.firePressed, player.hero.leftFreeze);	    
         
 	  }
 	}  

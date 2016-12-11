@@ -622,7 +622,11 @@ var loadState = {
 		/*Nick*/
 		  Nick = function(game, x, y){
 		    Hero.call(this,game,x, y, 'nick',2, .8);
+		    // Nick's collision roles reverse when firing, 
+		    // so we don't need to fire a weapon. 
+		    this.primaryWeapon.fire = function(){};	
 		  }	  
+
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;
 
@@ -746,7 +750,12 @@ this.updateExtendBefore();
 	if(baddy.exists){
 	  for(p=0;p<this.playerAvatars.length;p++){
 	    if(baddy.overlap(this.playerAvatars[p])&& !this.playerAvatars[p].parent.ghost){
-	      this.hitPlayer(this.playerAvatars[p].parent,1);
+		if(this.playerAvatars[p].parent.gamePad == 2 && this.playerAvatars[p].parent.isFiring){ 
+	      baddy.parent.hit(4);
+	      }
+	      else{
+	        this.hitPlayer(this.playerAvatars[p].parent,1);
+	      }
 	    }
 	  }
 	}  

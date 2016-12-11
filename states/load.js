@@ -177,13 +177,13 @@ var loadState = {
 	  }  
 	  else
 	  {
-	    game.players.player1.controls.leftPressed = (game.cursors.left.isDown);
-  	    game.players.player1.controls.rightPressed = (game.cursors.right.isDown);
-	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
-  	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
-	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
-	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
-	    game.players.player1.controls.debugPressed = (game.debugKey.isDown);
+	    game.players.player2.controls.leftPressed = (game.cursors.left.isDown);
+  	    game.players.player2.controls.rightPressed = (game.cursors.right.isDown);
+	    game.players.player2.controls.upPressed = (game.cursors.up.isDown);
+  	    game.players.player2.controls.downPressed = (game.cursors.down.isDown);
+	    game.players.player2.controls.firePressed = (game.fireKey.isDown);
+	    game.players.player2.controls.jumpPressed = (game.jumpKey.isDown);	 
+	    game.players.player2.controls.debugPressed = (game.debugKey.isDown);
 
  	    // add fake start keys for the 3 players
 	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
@@ -625,6 +625,7 @@ var loadState = {
 		  }	  
 		  Nick.prototype = Object.create(Hero.prototype);
 		  Nick.prototype.constructor = Nick;
+
 		    	
 	
 	  // Baddies
@@ -776,10 +777,18 @@ this.updateExtendBefore();
         if(!player.hero.jumping){player.hero.body.velocity.y = 0;}
 
         // standing fire 
-        if(player.controls.firePressed && !(player.hero.jumping || player.controls.leftPressed || player.controls.rightPressed)){player.hero.fire();} 
+	if(player.displayName == "Nick" && (player.hero.isFiring || player.controls.firePressed) && !player.hero.jumping){
+	console.log(player.hero.isFiring);
+	player.controls.leftPressed = false;
+	player.controls.rightPressed = false;
+	player.controls.upPressed = false;
+	player.controls.downPressed = false;
+	player.hero.fire();
+	}
+        else if(player.controls.firePressed && !(player.hero.jumping || player.controls.leftPressed || player.controls.rightPressed)){player.hero.fire();} 
     
         // jump key
-        if(player.controls.jumpPressed && !player.hero.isFiringi){player.hero.jump();}	
+        if(player.controls.jumpPressed && !player.hero.isFiring){player.hero.jump();}	
 
         // Z-axis cursors
         if(player.controls.downPressed  && (player.controls.rightPressed || player.controls.leftPressed) && !player.hero.jumping && (player.hero.feet() < (this.street.bottom -30))){player.hero.moveDown();}
@@ -803,7 +812,7 @@ this.updateExtendBefore();
             player.hero.run('left', player.controls.firePressed, player.hero.leftFreeze);	    
         
 	  }
-	}  
+	}
         else if(!player.hero.jumping && !player.hero.isFiring)
         {
           player.hero.standStill();	    

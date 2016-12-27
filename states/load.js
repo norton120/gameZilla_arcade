@@ -73,13 +73,15 @@ var loadState = {
 	    game.load.image('zla','assets/images/longstreet.gif');
 	    game.load.image('revzillaLogo', 'assets/images/revzilla_logo.png');
 	    game.load.image('zla_sticker', 'assets/images/zla.png');
-	    game.load.image('sprocket','assets/images/sprocket.png',56,56);
+
 	    game.load.image('concrete','assets/images/concrete.png',400,600);
 	    game.load.image('x_button','assets/images/x_button.png',75,75);
 	    game.load.image('z_button','assets/images/z_button.png',75,75);
 	    game.load.image('shadow','assets/images/shadow.png');
 	    game.load.image('cursor_button','assets/images/cursor_button.png',58,58);
 	    game.load.image('keyboardCat', 'assets/images/keyboardCat.png');
+
+	    game.load.spritesheet('sprocket','assets/images/gear.png',60,60);
 	    game.load.spritesheet('health_bar', 'assets/images/health_bar.png',123.8,25);
 	    game.load.spritesheet('troll', 'assets/images/troll_sprite.png',95.5,119);
 	    game.load.spritesheet('all_the_things', 'assets/images/all_the_things.png', 129, 120);
@@ -177,13 +179,13 @@ var loadState = {
 	  }  
 	  else
 	  {
-	    game.players.player2.controls.leftPressed = (game.cursors.left.isDown);
-  	    game.players.player2.controls.rightPressed = (game.cursors.right.isDown);
-	    game.players.player2.controls.upPressed = (game.cursors.up.isDown);
-  	    game.players.player2.controls.downPressed = (game.cursors.down.isDown);
-	    game.players.player2.controls.firePressed = (game.fireKey.isDown);
-	    game.players.player2.controls.jumpPressed = (game.jumpKey.isDown);	 
-	    game.players.player2.controls.debugPressed = (game.debugKey.isDown);
+	    game.players.player1.controls.leftPressed = (game.cursors.left.isDown);
+  	    game.players.player1.controls.rightPressed = (game.cursors.right.isDown);
+	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
+  	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
+	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
+	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
+	    game.players.player1.controls.debugPressed = (game.debugKey.isDown);
 
  	    // add fake start keys for the 3 players
 	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
@@ -216,7 +218,6 @@ var loadState = {
     this.weaponStore = game.add.group();
     this.weaponStore.createMultiple(200,sprite,0,false);
     game.physics.enable(this.weaponStore,Phaser.Physics.ARCADE); 
-
     this.nextFire = 0;
     this.fireRate = 200;
     this.projectileSpeed = 500;
@@ -224,10 +225,11 @@ var loadState = {
     
     this.fire = function(direction){
       if(this.nextFire < game.time.time){
-        
 	var projectile = this.weaponStore.getFirstExists(false); 
 	projectile.reset(((direction == 'left')? origin.world.x - 50 : origin.world.x + origin.width), origin.world.y + (origin.height /2.5));
 	projectile.exists = true;
+	projectile.animations.add('spin',null,10,true);
+	projectile.animations.play('spin');
 	// oversize the hitbox so it's less of a 'thread the needle' to hit bad guys
 	projectile.body.setSize(projectile.width,projectile.height+20,0,0);	
 	projectile.lifeSpan = this.projectileLifespan;

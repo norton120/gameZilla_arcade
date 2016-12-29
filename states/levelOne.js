@@ -3,7 +3,7 @@ var levelOneState = new sideScroller();
 levelOneState.createExtendBefore = function(){
   game.bgMusic.stop();	
   game.bgMusic = this.add.audio('booch_theme');
-  game.bgMusic.play(null,10);
+  game.bgMusic.play(null,0,1,true);
   game.world.setBounds(0,0,4000,768);
   this.bg = game.add.tileSprite(0,-250,2048,767,'bgCity');
   this.bg.fixedToCamera=true;

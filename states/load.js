@@ -51,16 +51,16 @@ var loadState = {
 
 
 /*sound effects*/	
-	    game.load.audio('shoot', 'assets/sounds/sprocket.mp3');  	
-	    game.load.audio('apexPreditor','assets/sounds/apex_preditor.mp3');
-	    game.load.audio('juggernaut', 'assets/sounds/juggernaut.mp3');
-	    game.load.audio('black_betty','assets/sounds/black_betty.mp3');	
-	    game.load.audio('rainbow_in_the_dark', 'assets/sounds/rainbow_in_the_dark.mp3');
 	    game.load.audio('jump','assets/sounds/jump.mp3');
+	    game.load.audio('blade','assets/sounds/blade.mp3');
 	    game.load.audio('booch_theme','assets/sounds/booch_theme.wav');
 	    game.load.audio('menu','assets/sounds/MKup.mp3');
-	    game.load.audio('hey', 'assets/sounds/hey.mp3');
+	    game.load.audio('hey', 'assets/audio/HEY.wav');
+	    game.load.audio('nickHit','assets/audio/nickHit.mp3');
 	    game.load.audio('typeWriter','assets/sounds/type.mp3');
+	    game.load.audio('laptopWack','assets/audio/laptopWack.wav');
+	    game.load.audio('mattHit','assets/audio/mattHit.mp3');
+	    game.load.audio('lazer','assets/audio/lazer.wav');
 	    
 /*sprites*/
 	    game.load.image('blackFill', 'assets/images/black.png');
@@ -96,14 +96,6 @@ var loadState = {
    // load the Phaser world physics, create the world space, set world constants	
    game.physics.startSystem(Phaser.Physics.ARCADE);
    game.time.desiredFps = 30;
-
-   // these can all go. create on level, stage and character levels 
-            // Create the global sound effects
-	    game.boochShootSound = game.add.audio('shoot');
-	    game.boochJuggernautSound = game.add.audio('juggernaut');
-	    game.boochApexPreditorSound =game.add.audio('apexPreditor');
-	    game.boochJumpSound = game.add.audio('jump');
-	    game.boochHeySound = game.add.audio('hey');
 
 /*PLAYERS*/
 	
@@ -179,13 +171,14 @@ var loadState = {
 	  }  
 	  else
 	  {
-	    game.players.player1.controls.leftPressed = (game.cursors.left.isDown);
-  	    game.players.player1.controls.rightPressed = (game.cursors.right.isDown);
-	    game.players.player1.controls.upPressed = (game.cursors.up.isDown);
-  	    game.players.player1.controls.downPressed = (game.cursors.down.isDown);
-	    game.players.player1.controls.firePressed = (game.fireKey.isDown);
-	    game.players.player1.controls.jumpPressed = (game.jumpKey.isDown);	 
-	    game.players.player1.controls.debugPressed = (game.debugKey.isDown);
+	    var testPlayer = "player1";
+	    game.players[testPlayer].controls.leftPressed = (game.cursors.left.isDown);
+  	    game.players[testPlayer].controls.rightPressed = (game.cursors.right.isDown);
+	    game.players[testPlayer].controls.upPressed = (game.cursors.up.isDown);
+  	    game.players[testPlayer].controls.downPressed = (game.cursors.down.isDown);
+	    game.players[testPlayer].controls.firePressed = (game.fireKey.isDown);
+	    game.players[testPlayer].controls.jumpPressed = (game.jumpKey.isDown);	 
+	    game.players[testPlayer].controls.debugPressed = (game.debugKey.isDown);
 
  	    // add fake start keys for the 3 players
 	    game.players.player1.controls.startPressed = (game.p1StartKey.isDown);
@@ -222,7 +215,6 @@ var loadState = {
     this.fireRate = 200;
     this.projectileSpeed = 500;
     this.projectileLifespan = 2500;
-    
     this.fire = function(direction){
       if(this.nextFire < game.time.time){
 	var projectile = this.weaponStore.getFirstExists(false); 
@@ -382,6 +374,14 @@ var loadState = {
     this.isHitTimer = 0;
     this.pacedFire = 0;
     this.isFiringTimer = 0;
+    this.hitSound = 'hey';
+    this.jumpSound = 'jump';
+    this.fireSound = 'blade';
+
+    this.SFX = {};
+    this.SFX.hit = game.add.audio(this.hitSound);
+    this.SFX.jump = game.add.audio(this.jumpSound);
+    this.SFX.fire = game.add.audio(this.fireSound);
 
     // Calculated Props
     this.feet = function(){return(this.avatar.world.y + this.avatar.height);}
@@ -445,7 +445,8 @@ var loadState = {
       try{
       if(!this.jumping){      
 	var dir = this.direction.charAt(0).toUpperCase() + this.direction.slice(1);      
-	this.avatar.animations.play('jumpStart'+dir);      
+	this.avatar.animations.play('jumpStart'+dir); 
+	this.SFX.jump.play();     
 	this.jumping = true;
 	start = this.avatar.body.y;   
         this.shadow.visible = true;
@@ -476,6 +477,7 @@ var loadState = {
 	this.isFiring = true;	    
         var anim = this.direction == 'right'? fireRight:fireLeft;
 	anim.play();
+	this.SFX.fire.play();
         anim.onComplete.add(function(){this.primaryWeapon.fire(this.direction); this.isFiring = false;},this);
       }
     }
@@ -487,6 +489,7 @@ var loadState = {
       game.time.events.add(2000,function(){this.ghost =false;},this);
       this.isHitTimer = game.time.time +400;	
       this.avatar.frameName = "land_"+this.direction+"_5";
+      this.SFX.hit.play();
       var damage = damage || 1;
       this.body.velocity.x = this.direction == "right"? -150:150; 
       this.parentPlayer.health = (this.parentPlayer.health-damage > -1)? this.parentPlayer.health-damage: 0;
@@ -617,16 +620,22 @@ var loadState = {
 		/*Matt*/
 		  Matt = function(game, x, y){
 		    Hero.call(this,game,x,y, 'booch',1, 1.2);
+		    this.SFX.hit = game.add.audio('mattHit');
+		    this.SFX.fire = game.add.audio('lazer');
 		  }
 		  Matt.prototype = Object.create(Hero.prototype);
 		  Matt.prototype.constructor = Matt;
 
 		/*Nick*/
 		  Nick = function(game, x, y){
+
 		    Hero.call(this,game,x, y, 'nick',2, .8);
 		    // Nick's collision roles reverse when firing, 
 		    // so we don't need to fire a weapon. 
 		    this.primaryWeapon.fire = function(){};	
+
+		    this.SFX.hit = game.add.audio('nickHit');
+		    this.SFX.fire = game.add.audio('laptopWack');
 		  }	  
 
 		  Nick.prototype = Object.create(Hero.prototype);

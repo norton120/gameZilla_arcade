@@ -4,7 +4,7 @@ echo "Content-type: application/json"
 echo ""
 echo "{"
 
-echo "\"coinMode\": {\"freePlay\":false},"
+echo "\"coinMode\": {\"freePlay\":true},"
 echo "\"quietMode\": false"
 
 echo "}"

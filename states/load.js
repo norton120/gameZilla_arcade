@@ -4,6 +4,7 @@ var loadState = {
  preload: function(){
 
         /* load the game config variables into the game */
+/* this read from a bash interface to a coin machine in RL. Here we just ghetto the vars 'cus I don't have time to fix it.
 	var loadHardwareInterface = new XMLHttpRequest();
 	loadHardwareInterface.onreadystatechange = function()
 	{
@@ -11,9 +12,13 @@ var loadState = {
 	    game.hardwareInterface = JSON.parse(loadHardwareInterface.responseText);
           }
         }
-	loadHardwareInterface.open("GET",'/cgi-bin/game_config',true);
+	loadHardwareInterface.open("GET",'usr/lib/cgi-bin/game_config',true);
 	loadHardwareInterface.send();
-
+*/
+    game.hardwareInterface ={};
+    game.hardwareInterface.coinMode = {} 
+    game.hardwareInterface.coinMode.freePlay = true;
+    game.hardwareInterface.quietMode = false;
 	game.coinCredit= 0;
 
 	/*load the high scores*/
@@ -171,7 +176,7 @@ var loadState = {
 	  }  
 	  else
 	  {
-	    var testPlayer = "player1";
+	    var testPlayer = "player3";
 	    game.players[testPlayer].controls.leftPressed = (game.cursors.left.isDown);
   	    game.players[testPlayer].controls.rightPressed = (game.cursors.right.isDown);
 	    game.players[testPlayer].controls.upPressed = (game.cursors.up.isDown);

@@ -9,6 +9,16 @@ Some of the things that make it Arcade Specific include:
 * Uncaught references to arcade-specific variables (coinCount, coinMode etc)
 * Assumed 3 gamepad controllers, with hard-coded button and axis values to match specific hardware
 
+## Launch a webserver!
+any webserver will do. If you've got python installed, cd to the project root and run `python -m SimpleHTTPServer 8000`. 
+
+## Keys!
+a = start
+z = a button
+x = b button
+left, right, up, down arrow - control the player
+
+
 ## APACHE NOTE ##
 Apache globally accessible mod utility is {{a2enmod}} so just run a2enmod cgi as root (and restart apache).
 
